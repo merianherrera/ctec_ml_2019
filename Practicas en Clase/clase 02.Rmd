@@ -1,0 +1,63 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(readr) # Paquete para leer csv mas rapido
+library(GGally)
+library(dplyr)
+library(visdat)
+```
+
+```{r}
+casas <- read.csv('kc_house_data.csv', header = T, na.strings = '?')
+```
+
+```{r}
+ggpairs(casas[3:21])
+```
+
+```{r}
+vis_dat(casas)
+boxplot(casas)
+```
+
+```{r}
+hist(casas$price)
+```
+
+```{r}
+qqnorm(casas$price)
+qqline(casas$price)
+densidad <- density(casas$price)
+plot(densidad)
+```
+
+```{r}
+logaritmo_casas = log10(casas$price)
+hist(logaritmo_casas)
+
+```
+
+```{r}
+qqnorm(logaritmo_casas)
+qqline(logaritmo_casas)
+densidad_logaritmo_casas <- density(logaritmo_casas)
+plot(densidad_logaritmo_casas)
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
