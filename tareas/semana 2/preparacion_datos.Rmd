@@ -7,7 +7,15 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# 
+# Estudiante
+* Merian Herrera Fuentes
+* meryann68@gmail.com
+* 207180364
+
+```{r}
+library(GGally)
+library(ggplot2)
+```
 
 # Breve introducción a ggpairs
 
@@ -16,9 +24,6 @@ knitr::opts_chunk$set(echo = TRUE)
 El siguiente ejemplo muestra el gráfico de las correlaciones y densidades de algunos atributos del dataset de ventas de casas.
 
 ```{r}
-library(GGally)
-library(ggplot2)
-
 casas <- read.csv('kc_house_data.csv', header = T, na.strings = '?')
 ggpairs(casas, columns = 3:7)
 ```
@@ -71,12 +76,12 @@ Como podemos observar la columna bathrooms posee valores inconsistentes ya que n
 Modifique la columna bathrooms para que solo posea valores enteros
 
 ```{r}
-casas$bathrooms <- as.integer(casas$bathrooms)
-```
+casas$bathrooms <- ceiling(casas$bathrooms)
 
-```{r}
 casas$bathrooms[1:10]
 ```
+
+Se decide usar la funcion `cealing()` para redondear los valores de la variable "bathrooms" ya que la misma aplica un redondeo hacia el numero mayor. Esto porque el dataset se trata sobre datos para la venta de casas, en el negocio de los bienes inmuebles muchas veces escuchamos que las casas tienen 2.5 baños, para referirse a que la casa tiene dos baños completos (Sanitario y ducha) y uno que es solo sanitario, por lo tanto podemos asumir que la casa en realidad tiene 3 baños. Ademas, para efectos de vender y promocionar las casas es mas llamativa una casa que tiene 3 baños a una que tiene 2 baños.
 
 ### 2. Llevar los datos a distribución normal.
 
@@ -100,7 +105,11 @@ Reemplace los valores faltantes de la columna sqft_living con la mediana de los 
 Nota: este dataset no posee valores faltantes pero para efectos del ejercicio esto no nos afecta ya que el código sería igual.
 
 ```{r}
-# Escriba su código aqui
+media_sqft_living = median(casas$sqft_living)
+media_sqft_living
+
+casas$sqft_living[is.na(casas$sqft_living)] <- media_sqft_living
+head(casas$sqft_living, 100)
 ```
 
 
@@ -121,7 +130,13 @@ feature_scaling <- function(x) {
 2. Compare el resultado con la función `scale()`
 
 ```{r}
-# Escriba su código aqui
+head(casas$sqft_lot, 100)
+
+with_feature_scaling <- feature_scaling(casas$sqft_lot)
+head(with_feature_scaling, 100)
+
+with_scale <- scale(casas$sqft_lot)
+head(with_scale, 100)
 ```
 
 ### 5. Normalización con la función z-score
@@ -134,11 +149,16 @@ Pista: utilice las funciones `mean`, `sd`
 
 ```{r}
 # Datos antes de la transformación
-hist(casas$bathrooms)
+hist(casas$bathrooms, col="#41bbd9",border="#006e90")
 # Escriba su código aqui
-# ...
+z_score <- function(values) {
+  score <- (values - mean(values)) / (sd(values))
+  return(score)
+}
+
+casas$bathrooms <- z_score(casas$bathrooms)
 # Después de la transformación
-hist(casas$bathrooms)
+hist(casas$bathrooms, col="#eb4511",border="#b02e0c")
 ```
 
 Note que ahora la media de los datos se acerca a 0
