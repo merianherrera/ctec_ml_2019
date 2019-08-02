@@ -1,7 +1,20 @@
 
 # Tarea 1
 
-Siga el siguiente documento y escriba el código en las secciones señaladas.
+```{r}
+#librerías utilizadas
+library(caTools)
+
+#Librería de gráficos
+library(ggplot2)
+```
+
+<br>
+
+### Estudiante
+   * Merian Herrera Fuentes
+   * meryann68@gmail.com
+   * 207180364
 
 ### Autores
    * Efrén Jiménez
@@ -42,16 +55,6 @@ Ejemplo:
 summary(casas)
 ```
 
-```{r}
-#librerías utilizadas
-library(caTools)
-
-#Librería de gráficos
-library(ggplot2)
-#Evitar mostrar warning messages
-options(warn=-1)
-```
-
 Cargue en una variable las columnas 'price' y 'sqft_living'
 
 Ejemplo
@@ -79,6 +82,8 @@ cor(casas)
 ```
 
 ### Interpretando los resultados de la correlación
+
+Ya que tenemos correlaciones de 0.95 podemos observar una correlacion positiva muy fuerte entre las variables price y sqft_living.
 
 ### Tipos de relación
 - -1,00 = Correlación negativa perfecta

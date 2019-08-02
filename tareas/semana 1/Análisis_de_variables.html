@@ -379,7 +379,20 @@ $(document).ready(function () {
 
 <div id="tarea-1" class="section level1">
 <h1>Tarea 1</h1>
-<p>Siga el siguiente documento y escriba el código en las secciones señaladas.</p>
+<pre class="r"><code>#librerías utilizadas
+library(caTools)
+
+#Librería de gráficos
+library(ggplot2)</code></pre>
+<p><br></p>
+<div id="estudiante" class="section level3">
+<h3>Estudiante</h3>
+<ul>
+<li>Merian Herrera Fuentes</li>
+<li><a href="mailto:meryann68@gmail.com" class="email">meryann68@gmail.com</a></li>
+<li>207180364</li>
+</ul>
+</div>
 <div id="autores" class="section level3">
 <h3>Autores</h3>
 <ul>
@@ -461,13 +474,6 @@ $(document).ready(function () {
 ##  3rd Qu.:2470   3rd Qu.: 10862  
 ##  Max.   :5790   Max.   :858132  
 ## </code></pre>
-<pre class="r"><code>#librerías utilizadas
-library(caTools)
-
-#Librería de gráficos
-library(ggplot2)
-#Evitar mostrar warning messages
-options(warn=-1)</code></pre>
 <p>Cargue en una variable las columnas ‘price’ y ‘sqft_living’</p>
 <p>Ejemplo</p>
 <p><code>casas &lt;-casas[,c(3,6)]</code></p>
@@ -490,6 +496,7 @@ options(warn=-1)</code></pre>
 ## sqft_living 0.9586948   1.0000000</code></pre>
 <div id="interpretando-los-resultados-de-la-correlacion" class="section level3">
 <h3>Interpretando los resultados de la correlación</h3>
+<p>Ya que tenemos correlaciones de 0.95 podemos observar una correlacion positiva muy fuerte entre las variables price y sqft_living.</p>
 </div>
 <div id="tipos-de-relacion" class="section level3">
 <h3>Tipos de relación</h3>
