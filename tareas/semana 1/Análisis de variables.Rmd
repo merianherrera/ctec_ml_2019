@@ -133,6 +133,53 @@ Ejemplo
 plot(y = casas$price,x = casas$sqft_living, main = 'Relación entre Precio y Metros cuadrados', ylab = 'price', xlab = 'sqft_living')
 ```
 
+```{r}
+hist(log10(casas$sqft_living))
+```
+
+```{r}
+log_price <- log10(casas$price)
+log_sqft_living <- log10(casas$sqft_living)
+
+plot(y = log_price,x = log_sqft_living, main = 'Relación entre Precio y Metros cuadrados', ylab = 'price', xlab = 'sqft_living')
+```
+
+```{r}
+modelo_pred_precio = lm(formula= log_price ~ log_sqft_living + log10(casas$sqft_lot), data=casas)
+
+modelo_pred_precio
+```
+
+```{r}
+plot(log_sqft_living ~ log(casas$sqft_lot), data = casas)
+modelo_pred_area = lm(formula= log_sqft_living  ~  poly(log10(casas$sqft_lot), 2), data=casas)
+points(
+  fitted(modelo_pred_area) ~ log(casas$sqft_lot), 
+  casas, col = "blue")
+
+points(
+  fitted(lm(formula= log_sqft_living  ~  poly(log10(casas$sqft_lot), 3), data=casas))
+  ~ log(casas$sqft_lot), 
+  casas, col = "green")
+
+points(
+  fitted(lm(formula= log_sqft_living  ~  poly(log10(casas$sqft_lot), 4), data=casas))
+  ~ log(casas$sqft_lot), 
+  casas, col = "pink")
+
+points(
+  fitted(lm(formula= log_sqft_living  ~  poly(log10(casas$sqft_lot), 5), data=casas))
+  ~ log(casas$sqft_lot), 
+  casas, col = "skyblue")
+
+#predict(modelo_pred_area, log(casas$sqft_lot))
+
+```
+
+```{r}
+
+```
+
 ## Conclusiones
 
 Como se puede observar tanto en la gráfica como en las correlaciones, existe una tendencia clara en el aumento del precio de las viviendas con respecto a los metros cuadrados. Con este pequeño análisis de los datos podemos elegir las variables predictoras y el modelo inicial, en este caso podemos elegir utilizar una regresión lineal simple utilizando la columna 'sqft_living' como variable predictora.
