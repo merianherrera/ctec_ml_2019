@@ -52,7 +52,7 @@ head(autos, 300)
 2. Utilizando Ggpairs cree un gráfico de los atributos del dataset, observe las correlaciones entre atributos
 
 ```{r}
-ggpairs(autos,columns = 3:7)
+ggpairs(autos,columns = c(1,3,4,5,6,7))
 ```
 
 3. Separe los datos en 2 conjuntos, uno de entrenamiento y otro de pruebas. Normalmente se trabaja utilizando un 70-80% de los datos para entrenamiento y el resto para pruebas.
@@ -62,9 +62,14 @@ Recuerde fijar una semilla para que el documento sea reproducible.
 Pista: https://www.rdocumentation.org/packages/caTools/versions/1.17.1/topics/sample.split
 
 ```{r}
-set.seed(123)
+set.seed(124) # reproducibilidad
+
+media_hp = median(autos$hp)
+autos$hp[is.na(autos$hp)] <- media_hp
+
 y =  dplyr::pull(autos, mpg)
-autos$dividir_datos <- sample.split(y, SplitRatio=0.75)
+
+autos$dividir_datos <- sample.split(y, SplitRatio=0.70)
 head(autos, 400)
 ```
 
@@ -85,9 +90,9 @@ Pista: https://www.rdocumentation.org/packages/lessR/versions/1.9.8/topics/reg
 Nota: Al crear el modelo utilice el conjunto de datos de entrenamiento definido en el punto 3.
 
 ```{r}
-regresion_data_training = lessR::reg(mpg ~ disp + weight, 
+regresion_data_training = lessR::reg(mpg ~ hp + weight, 
            data=autos_training, dframe=autos_training, 
-           sig.digits=4, res.rows=NULL)
+           sig.digits=4, res.rows=NULL, results="brief", scatter.cor=TRUE)
 
 regresion_data_training
 ```
@@ -99,7 +104,10 @@ Pista: https://www.rdocumentation.org/packages/mltools/versions/0.3.5/topics/mse
 
 regresion_testing = lessR::reg(mpg ~ disp + weight, 
            data=autos_testing, dframe=autos_testing, 
-           sig.digits=4, res.rows=NULL)
+           sig.digits=4, res.rows=NULL, scatter.cor=TRUE)
+
+
+
 
 # mse(preds = NULL, actuals = NULL, weights = 1, na.rm = FALSE)
 ```
