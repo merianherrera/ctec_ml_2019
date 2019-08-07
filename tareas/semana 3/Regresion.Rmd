@@ -32,7 +32,7 @@ Con el fin de analizar y tratar de estimar las millas por galón de diferentes m
 
 # Ejercicios
 
-```{r}
+```{r echo=FALSE, warning=FALSE}
 library(readr)
 library(GGally)
 library(ggplot2)
@@ -40,19 +40,56 @@ library(caTools)
 library(lessR)
 library(Metrics)
 library(mltools)
+library(dplyr)
+library(tidyr)
 ```
 
 1. Cargue el archivo auto-mpg_g.csv en una variable
 
 ```{r}
 autos <- read_csv("auto-mpg_g.csv")
-head(autos, 300)
+head(autos, 400)
 ```
 
-2. Utilizando Ggpairs cree un gráfico de los atributos del dataset, observe las correlaciones entre atributos
+2. Utilizando Ggpairs cree un gráfico de los atributos del dataset, observe las 
+correlaciones entre atributos
+
+<br>
+**Preparacion de los datos:**
+<br>
 
 ```{r}
-ggpairs(autos,columns = c(1,3,4,5,6,7))
+get.mode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+# Reemplazar los valores en "0" dentro de la columna caballos de fuerza.
+hp_mode <- get.mode(autos$hp)
+autos$hp[autos$hp == 0] <- hp_mode
+
+# Llenar los valores nulos en la columna caballos de fuerza
+media_hp = median(autos$hp)
+autos$hp[is.na(autos$hp)] <- media_hp
+
+# Dividir los valores de la columna modelo para extraer solo el fabricante, ya que al tener 305 modelos estabamos perdiendo variabilidad en los datos
+autos <- autos %>% separate(model.name, 
+                c("manufacturer"))
+head(autos, 400)
+```
+
+```{r}
+ggpairs(autos,columns = c(1, 3, 4, 5, 6, 7))
+```
+
+
+```{r}
+hist(autos$mpg)
+hist(autos$hp)
+hist(autos$disp)
+
+hist(log10(autos$mpg), col="#cfbae1",border="#c59fc9")
+hist(log10(autos$hp), col="#cfbae1",border="#c59fc9")
+hist(log10(autos$disp), col="#cfbae1",border="#c59fc9")
 ```
 
 3. Separe los datos en 2 conjuntos, uno de entrenamiento y otro de pruebas. Normalmente se trabaja utilizando un 70-80% de los datos para entrenamiento y el resto para pruebas.
@@ -63,9 +100,6 @@ Pista: https://www.rdocumentation.org/packages/caTools/versions/1.17.1/topics/sa
 
 ```{r}
 set.seed(124) # reproducibilidad
-
-media_hp = median(autos$hp)
-autos$hp[is.na(autos$hp)] <- media_hp
 
 y =  dplyr::pull(autos, mpg)
 
@@ -101,13 +135,6 @@ regresion_data_training
 
 Pista: https://www.rdocumentation.org/packages/mltools/versions/0.3.5/topics/mse
 ```{r}
-
-regresion_testing = lessR::reg(mpg ~ disp + weight, 
-           data=autos_testing, dframe=autos_testing, 
-           sig.digits=4, res.rows=NULL, scatter.cor=TRUE)
-
-
-
 
 # mse(preds = NULL, actuals = NULL, weights = 1, na.rm = FALSE)
 ```

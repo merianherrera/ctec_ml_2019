@@ -1,0 +1,702 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={Regresion},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\providecommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{Regresion}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{}
+    \preauthor{}\postauthor{}
+    \date{}
+    \predate{}\postdate{}
+  
+
+\begin{document}
+\maketitle
+
+\hypertarget{tarea-3.}{%
+\section{Tarea 3.}\label{tarea-3.}}
+
+\hypertarget{regresion-lineal}{%
+\section{Regresión lineal}\label{regresion-lineal}}
+
+Análisis del Problema
+
+El desempeño de un automóvil se puede medir de diferentes formas.
+Algunas comunes son la cantidad de \textbf{caballos de fuerza} y el
+\textbf{rendimiento} del mismo, que se puede resumir en cuantas millas
+puede recorrer el automóvil por cada galón de combustible que consume.
+Para los clientes, potenciales compradores de un automóvil, este
+rendimiento es importante pues puede ayudar a tomar una decisión con
+respecto a cuál automóvil comprar (si, por ejemplo, el cliente quiere un
+auto que rinda por muchas millas y pueda economizar en la compra de
+combustible).
+
+Desde este punto de vista, tanto a clientes como a fabricadores de
+automóviles, les conviene entender cuál es la relación entre diferentes
+características del automóvil y su rendimiento, pues el conocer estas
+relaciones les puede ayudar a inferir cuál va a ser la eficiencia del
+vehículo a partir de ver los valores de otras características. Para
+fabricantes, puede ser importante conocer estas relaciones para saber
+cómo hacer cada modelo más eficiente con respecto al anterior.
+
+Entendimiento de los Datos
+
+Con el fin de analizar y tratar de estimar las millas por galón de
+diferentes modelos de automóviles, se trabajó con un conjunto de datos
+que contiene 398 observaciones y 9 variables:
+
+\begin{itemize}
+\tightlist
+\item
+  mpg (millas por galón): numérica, con un rango de 9 a 46.60.
+\item
+  cyl (cilindraje): categórica ordinal, con valores posibles de 3, 4, 5,
+  6 y 8.
+\item
+  disp (desplazamiento): numérica, con un rango de 68 a 455.
+\item
+  hp (caballos de fuerza): numérica, con un rango de 46 a 230 y 6
+  valores faltantes.
+\item
+  weight (peso): numérica, con un rango de 1613 a 5140.
+\item
+  acc (aceleración): numérica, con un rango de 8 a 24.80.
+\item
+  model year (año): categórica, con 13 valores diferentes representando
+  el año del automóvil.
+\item
+  origin (origen): categórica, 3 valores posibles: 1, 2, 3.
+\item
+  model name (nombre del modelo): categórica, con 305 posibles valores.
+\end{itemize}
+
+\hypertarget{ejercicios}{%
+\section{Ejercicios}\label{ejercicios}}
+
+\begin{verbatim}
+## Loading required package: ggplot2
+\end{verbatim}
+
+\begin{verbatim}
+## Registered S3 method overwritten by 'GGally':
+##   method from   
+##   +.gg   ggplot2
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## lessR 3.8.8     feedback: gerbing@pdx.edu     web: lessRstats.com/new
+## ---------------------------------------------------------------------
+## 1. d <- Read("")           Read text, Excel, SPSS, SAS or R data file
+##                            d: default data frame, no need for data=
+## 2. l <- Read("", var_labels=TRUE)   Read variable labels into l,
+##                            required name for data frame of labels
+## 3. Help()                  Get help, and, e.g., Help(Read)
+## 4. hs(), bc(), or ca()     All histograms, all bar charts, or both
+## 5. Plot(X) or Plot(X,Y)    For continuous and categorical variables
+## 6. by1= , by2=             Trellis graphics, a plot for each by1, by2
+## 7. reg(Y ~ X, Rmd="eg")    Regression with full interpretative output
+## 8. style("gray")           Grayscale theme, + many others available
+##    style(show=TRUE)        all color/style options and current values
+## 9. getColors()             create many styles of color palettes
+## 
+## lessR parameter names now use _'s. Names with a period are deprecated.
+## Ex:  bin_width  instead of  bin.width
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'mltools'
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:Metrics':
+## 
+##     mse, msle, rmse, rmsle
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'dplyr'
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:GGally':
+## 
+##     nasa
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'tidyr'
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:mltools':
+## 
+##     replace_na
+\end{verbatim}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Cargue el archivo auto-mpg\_g.csv en una variable
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{autos <-}\StringTok{ }\KeywordTok{read_csv}\NormalTok{(}\StringTok{"auto-mpg_g.csv"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Parsed with column specification:
+## cols(
+##   mpg = col_double(),
+##   cyl = col_double(),
+##   disp = col_double(),
+##   hp = col_double(),
+##   weight = col_double(),
+##   acc = col_double(),
+##   model.year = col_double(),
+##   origin = col_double(),
+##   model.name = col_character()
+## )
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{head}\NormalTok{(autos, }\DecValTok{400}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 398 x 9
+##      mpg   cyl  disp    hp weight   acc model.year origin model.name       
+##    <dbl> <dbl> <dbl> <dbl>  <dbl> <dbl>      <dbl>  <dbl> <chr>            
+##  1    18     8   307   130   3504    12         70      1 chevrolet chevel~
+##  2    15     8   350   165   3693    12         70      1 buick skylark 320
+##  3    18     8   318   150   3436    11         70      1 plymouth satelli~
+##  4    16     8   304   150   3433    12         70      1 amc rebel sst    
+##  5    17     8   302   140   3449    11         70      1 ford torino      
+##  6    15     8   429   198   4341    10         70      1 ford galaxie 500 
+##  7    14     8   454   220   4354     9         70      1 chevrolet impala 
+##  8    14     8   440   215   4312     9         70      1 plymouth fury iii
+##  9    14     8   455   225   4425    10         70      1 pontiac catalina 
+## 10    15     8   390   190   3850     9         70      1 amc ambassador d~
+## # ... with 388 more rows
+\end{verbatim}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{1}
+\tightlist
+\item
+  Utilizando Ggpairs cree un gráfico de los atributos del dataset,
+  observe las correlaciones entre atributos
+\end{enumerate}
+
+\textbf{Preparacion de los datos:}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{get.mode <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(v) \{}
+\NormalTok{   uniqv <-}\StringTok{ }\KeywordTok{unique}\NormalTok{(v)}
+\NormalTok{   uniqv[}\KeywordTok{which.max}\NormalTok{(}\KeywordTok{tabulate}\NormalTok{(}\KeywordTok{match}\NormalTok{(v, uniqv)))]}
+\NormalTok{\}}
+\CommentTok{# Reemplazar los valores en "0" dentro de la columna caballos de fuerza.}
+\NormalTok{hp_mode <-}\StringTok{ }\KeywordTok{get.mode}\NormalTok{(autos}\OperatorTok{$}\NormalTok{hp)}
+\NormalTok{autos}\OperatorTok{$}\NormalTok{hp[autos}\OperatorTok{$}\NormalTok{hp }\OperatorTok{==}\StringTok{ }\DecValTok{0}\NormalTok{] <-}\StringTok{ }\NormalTok{hp_mode}
+
+\CommentTok{# Llenar los valores nulos en la columna caballos de fuerza}
+\NormalTok{media_hp =}\StringTok{ }\KeywordTok{median}\NormalTok{(autos}\OperatorTok{$}\NormalTok{hp)}
+\NormalTok{autos}\OperatorTok{$}\NormalTok{hp[}\KeywordTok{is.na}\NormalTok{(autos}\OperatorTok{$}\NormalTok{hp)] <-}\StringTok{ }\NormalTok{media_hp}
+
+\CommentTok{# Dividir los valores de la columna modelo para extraer solo el fabricante, ya que al tener 305 modelos estabamos perdiendo variabilidad en los datos}
+\NormalTok{autos <-}\StringTok{ }\NormalTok{autos }\OperatorTok{%>%}\StringTok{ }\KeywordTok{separate}\NormalTok{(model.name, }
+                \KeywordTok{c}\NormalTok{(}\StringTok{"manufacturer"}\NormalTok{))}
+\KeywordTok{head}\NormalTok{(autos, }\DecValTok{400}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 398 x 9
+##      mpg   cyl  disp    hp weight   acc model.year origin manufacturer
+##    <dbl> <dbl> <dbl> <dbl>  <dbl> <dbl>      <dbl>  <dbl> <chr>       
+##  1    18     8   307   130   3504    12         70      1 chevrolet   
+##  2    15     8   350   165   3693    12         70      1 buick       
+##  3    18     8   318   150   3436    11         70      1 plymouth    
+##  4    16     8   304   150   3433    12         70      1 amc         
+##  5    17     8   302   140   3449    11         70      1 ford        
+##  6    15     8   429   198   4341    10         70      1 ford        
+##  7    14     8   454   220   4354     9         70      1 chevrolet   
+##  8    14     8   440   215   4312     9         70      1 plymouth    
+##  9    14     8   455   225   4425    10         70      1 pontiac     
+## 10    15     8   390   190   3850     9         70      1 amc         
+## # ... with 388 more rows
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{ggpairs}\NormalTok{(autos,}\DataTypeTok{columns =} \KeywordTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{3}\NormalTok{, }\DecValTok{4}\NormalTok{, }\DecValTok{5}\NormalTok{, }\DecValTok{6}\NormalTok{, }\DecValTok{7}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Regresion_files/figure-latex/unnamed-chunk-4-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{hist}\NormalTok{(autos}\OperatorTok{$}\NormalTok{mpg)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Regresion_files/figure-latex/unnamed-chunk-5-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{hist}\NormalTok{(autos}\OperatorTok{$}\NormalTok{hp)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Regresion_files/figure-latex/unnamed-chunk-5-2.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{hist}\NormalTok{(autos}\OperatorTok{$}\NormalTok{disp)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Regresion_files/figure-latex/unnamed-chunk-5-3.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{hist}\NormalTok{(}\KeywordTok{log10}\NormalTok{(autos}\OperatorTok{$}\NormalTok{mpg), }\DataTypeTok{col=}\StringTok{"#cfbae1"}\NormalTok{,}\DataTypeTok{border=}\StringTok{"#c59fc9"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Regresion_files/figure-latex/unnamed-chunk-5-4.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{hist}\NormalTok{(}\KeywordTok{log10}\NormalTok{(autos}\OperatorTok{$}\NormalTok{hp), }\DataTypeTok{col=}\StringTok{"#cfbae1"}\NormalTok{,}\DataTypeTok{border=}\StringTok{"#c59fc9"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Regresion_files/figure-latex/unnamed-chunk-5-5.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{hist}\NormalTok{(}\KeywordTok{log10}\NormalTok{(autos}\OperatorTok{$}\NormalTok{disp), }\DataTypeTok{col=}\StringTok{"#cfbae1"}\NormalTok{,}\DataTypeTok{border=}\StringTok{"#c59fc9"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Regresion_files/figure-latex/unnamed-chunk-5-6.pdf}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{2}
+\tightlist
+\item
+  Separe los datos en 2 conjuntos, uno de entrenamiento y otro de
+  pruebas. Normalmente se trabaja utilizando un 70-80\% de los datos
+  para entrenamiento y el resto para pruebas.
+\end{enumerate}
+
+Recuerde fijar una semilla para que el documento sea reproducible.
+
+Pista:
+\url{https://www.rdocumentation.org/packages/caTools/versions/1.17.1/topics/sample.split}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{set.seed}\NormalTok{(}\DecValTok{124}\NormalTok{) }\CommentTok{# reproducibilidad}
+
+\NormalTok{y =}\StringTok{  }\NormalTok{dplyr}\OperatorTok{::}\KeywordTok{pull}\NormalTok{(autos, mpg)}
+
+\NormalTok{autos}\OperatorTok{$}\NormalTok{dividir_datos <-}\StringTok{ }\KeywordTok{sample.split}\NormalTok{(y, }\DataTypeTok{SplitRatio=}\FloatTok{0.70}\NormalTok{)}
+\KeywordTok{head}\NormalTok{(autos, }\DecValTok{400}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 398 x 10
+##      mpg   cyl  disp    hp weight   acc model.year origin manufacturer
+##    <dbl> <dbl> <dbl> <dbl>  <dbl> <dbl>      <dbl>  <dbl> <chr>       
+##  1    18     8   307   130   3504    12         70      1 chevrolet   
+##  2    15     8   350   165   3693    12         70      1 buick       
+##  3    18     8   318   150   3436    11         70      1 plymouth    
+##  4    16     8   304   150   3433    12         70      1 amc         
+##  5    17     8   302   140   3449    11         70      1 ford        
+##  6    15     8   429   198   4341    10         70      1 ford        
+##  7    14     8   454   220   4354     9         70      1 chevrolet   
+##  8    14     8   440   215   4312     9         70      1 plymouth    
+##  9    14     8   455   225   4425    10         70      1 pontiac     
+## 10    15     8   390   190   3850     9         70      1 amc         
+## # ... with 388 more rows, and 1 more variable: dividir_datos <lgl>
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{autos_training=}\KeywordTok{subset}\NormalTok{(autos, autos}\OperatorTok{$}\NormalTok{dividir_datos}\OperatorTok{==}\OtherTok{TRUE}\NormalTok{)}
+\KeywordTok{head}\NormalTok{(autos_training, }\DecValTok{400}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 275 x 10
+##      mpg   cyl  disp    hp weight   acc model.year origin manufacturer
+##    <dbl> <dbl> <dbl> <dbl>  <dbl> <dbl>      <dbl>  <dbl> <chr>       
+##  1    18     8   307   130   3504    12         70      1 chevrolet   
+##  2    18     8   318   150   3436    11         70      1 plymouth    
+##  3    16     8   304   150   3433    12         70      1 amc         
+##  4    17     8   302   140   3449    11         70      1 ford        
+##  5    15     8   429   198   4341    10         70      1 ford        
+##  6    14     8   454   220   4354     9         70      1 chevrolet   
+##  7    14     8   440   215   4312     9         70      1 plymouth    
+##  8    15     8   390   190   3850     9         70      1 amc         
+##  9    15     8   383   170   3563    10         70      1 dodge       
+## 10    14     8   340   160   3609     8         70      1 plymouth    
+## # ... with 265 more rows, and 1 more variable: dividir_datos <lgl>
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{autos_testing=}\KeywordTok{subset}\NormalTok{(autos, autos}\OperatorTok{$}\NormalTok{dividir_datos}\OperatorTok{==}\OtherTok{FALSE}\NormalTok{)}
+\KeywordTok{head}\NormalTok{(autos_testing, }\DecValTok{400}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 123 x 10
+##      mpg   cyl  disp    hp weight   acc model.year origin manufacturer
+##    <dbl> <dbl> <dbl> <dbl>  <dbl> <dbl>      <dbl>  <dbl> <chr>       
+##  1    15     8   350   165   3693    12         70      1 buick       
+##  2    14     8   455   225   4425    10         70      1 pontiac     
+##  3    26     4   121   113   2234    13         70      2 bmw         
+##  4    10     8   360   215   4615    14         70      1 ford        
+##  5    16     6   225   105   3439    16         71      1 plymouth    
+##  6    19     6   250    88   3302    16         71      1 ford        
+##  7    14     8   351   153   4154    14         71      1 ford        
+##  8    14     8   318   150   4096    13         71      1 plymouth    
+##  9    12     8   383   180   4955    12         71      1 dodge       
+## 10    13     8   400   175   5140    12         71      1 pontiac     
+## # ... with 113 more rows, and 1 more variable: dividir_datos <lgl>
+\end{verbatim}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{3}
+\tightlist
+\item
+  Cree un modelo de regresion lineal utilizando el atributo mpg como la
+  variable objetivo y en base a las correlaciones observadas en el
+  gráfico del punto 2 escoja al menos dos atributos para usarlos como
+  variables predictoras para el modelo.
+\end{enumerate}
+
+Pista:
+\url{https://www.rdocumentation.org/packages/lessR/versions/1.9.8/topics/reg}
+
+Nota: Al crear el modelo utilice el conjunto de datos de entrenamiento
+definido en el punto 3.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{regresion_data_training =}\StringTok{ }\NormalTok{lessR}\OperatorTok{::}\KeywordTok{reg}\NormalTok{(mpg }\OperatorTok{~}\StringTok{ }\NormalTok{hp }\OperatorTok{+}\StringTok{ }\NormalTok{weight, }
+           \DataTypeTok{data=}\NormalTok{autos_training, }\DataTypeTok{dframe=}\NormalTok{autos_training, }
+           \DataTypeTok{sig.digits=}\DecValTok{4}\NormalTok{, }\DataTypeTok{res.rows=}\OtherTok{NULL}\NormalTok{, }\DataTypeTok{results=}\StringTok{"brief"}\NormalTok{, }\DataTypeTok{scatter.cor=}\OtherTok{TRUE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Regresion_files/figure-latex/unnamed-chunk-9-1.pdf}
+\includegraphics{Regresion_files/figure-latex/unnamed-chunk-9-2.pdf}
+\includegraphics{Regresion_files/figure-latex/unnamed-chunk-9-3.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{regresion_data_training}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## >>> Suggestion
+## # Create an R markdown file for interpretative output with  Rmd = "file_name"
+## lessR::reg(mpg ~ hp + weight, data=autos_training, dframe=autos_training, sig.digits=4, res.rows=NULL, results="brief", scatter.cor=TRUE, Rmd="eg")  
+## 
+## 
+##   BACKGROUND
+## 
+## Data Frame:  autos_training 
+##  
+## Response Variable: mpg 
+## Predictor Variable 1: hp 
+## Predictor Variable 2: weight 
+##  
+## Number of cases (rows) of data:  275 
+## Number of cases retained for analysis:  275 
+## 
+## 
+##   BASIC ANALYSIS
+## 
+##              Estimate    Std Err  t-value  p-value   Lower 95%   Upper 95% 
+## (Intercept)    46.316      0.963   48.105    0.000      44.421      48.212 
+##          hp    -0.030      0.013   -2.304    0.022      -0.055      -0.004 
+##      weight    -0.007      0.001  -11.362    0.000      -0.008      -0.006 
+## 
+## 
+## Standard deviation of residuals:  4.301 for 272 degrees of freedom 
+##  
+## R-squared:  0.700    Adjusted R-squared:  0.698    PRESS R-squared:  0.693 
+## 
+## Null hypothesis that all population slope coefficients are 0:
+##   F-statistic: 317.577     df: 2 and 272     p-value:  0.000 
+## 
+## 
+##             df    Sum Sq   Mean Sq   F-value   p-value 
+##        hp    1  9360.181  9360.181   506.068     0.000 
+##    weight    1  2387.571  2387.571   129.086     0.000 
+## Model        2 11747.753  5873.876   317.577     0.000 
+##  
+## Residuals  272  5030.887    18.496 
+##  
+## mpg        274 16778.640    61.236 
+## 
+## 
+##   RELATIONS AMONG THE VARIABLES
+## 
+##            mpg    hp weight 
+##      mpg  1.00 -0.75  -0.83 
+##       hp -0.75  1.00   0.85 
+##   weight -0.83  0.85   1.00 
+## 
+## 
+##          Tolerance       VIF 
+##       hp     0.281     3.553 
+##   weight     0.281     3.553 
+## 
+## 
+##   hp weight    R2adj    X's 
+##    1      1    0.698      2 
+##    0      1    0.693      1 
+##    1      0    0.556      1 
+##  
+## [based on Thomas Lumley's leaps function from the leaps package] 
+##  
+## 
+## 
+##   RESIDUALS AND INFLUENCE
+## 
+## Data, Fitted, Residual, Studentized Residual, Dffits, Cook's Distance 
+##    [sorted by Cook's Distance] 
+##    [res_rows = 20, out of 275 rows of data, or do res_rows="all"] 
+## --------------------------------------------------------------- 
+##            hp   weight    mpg fitted  resid rstdnt dffits cooks 
+##    12 225.000 3086.000 14.000 19.085 -5.085 -1.264 -0.475 0.075 
+##   275 150.000 2320.000 35.000 26.413  8.587  2.060  0.472 0.073 
+##   226  65.000 2110.000 47.000 30.337 16.663  3.995  0.355 0.040 
+##   272  52.000 2130.000 44.000 30.590 13.410  3.188  0.337 0.037 
+##    85 230.000 4278.000 16.000 11.000  5.000  1.202  0.311 0.032 
+##   229  67.000 1850.000 45.000 32.008 12.992  3.084  0.314 0.032 
+##   266  85.000 3015.000 38.000 23.717 14.283  3.398  0.304 0.030 
+##   174  48.000 1985.000 43.000 31.674 11.326  2.679  0.294 0.028 
+##    70 225.000 4951.000 12.000  6.667  5.333  1.268  0.264 0.023 
+##   111  72.000 3158.000 15.000 23.151 -8.151 -1.922 -0.264 0.023 
+##   110  72.000 3432.000 15.000 21.327 -6.327 -1.496 -0.254 0.021 
+##   231 132.000 2910.000 33.000 23.019  9.981  2.353  0.252 0.021 
+##   251 105.000 3725.000 27.000 18.395  8.605  2.027  0.245 0.020 
+##   218  76.000 2144.000 42.000 29.783 12.217  2.889  0.245 0.020 
+##   249  76.000 3160.000 31.000 23.019  7.981  1.879  0.238 0.019 
+##   228  65.000 2110.000 41.000 30.337 10.663  2.513  0.223 0.016 
+##    88 180.000 3664.000 11.000 16.573 -5.573 -1.316 -0.220 0.016 
+##    66 198.000 4952.000 12.000  7.463  4.537  1.070  0.178 0.011 
+##   211  77.000 3530.000 25.000 20.526  4.474  1.055  0.177 0.010 
+##    18  46.000 1835.000 26.000 32.732 -6.732 -1.579 -0.177 0.010 
+## 
+## 
+##   FORECASTING ERROR
+## 
+## Data, Predicted, Standard Error of Forecast, 95% Prediction Intervals 
+##    [sorted by lower bound of prediction interval] 
+##    [to see all intervals do pred_rows="all"] 
+## --------------------------------------------------------------- 
+##            hp   weight    mpg   pred    sf pi:lwr pi:upr  width 
+##   206 125.000 3605.000 19.000 18.600 4.314 10.108 27.092 16.985 
+##    12 225.000 3086.000 14.000 19.085 4.559 10.110 28.059 17.949 
+##    97 110.000 3632.000 16.000 18.866 4.322 10.358 27.374 17.017 
+## ... 
+##   129  88.000 2957.000 23.000 24.014 4.314 15.521 32.506 16.985 
+##    90 100.000 2901.000 19.000 24.030 4.309 15.548 32.513 16.965 
+##   179  85.000 2965.000 20.000 24.050 4.316 15.552 32.547 16.995 
+## ... 
+##   237  58.000 1755.000 39.000 32.908 4.325 24.394 41.422 17.028 
+##    42  69.000 1613.000 35.000 33.527 4.334 24.995 42.059 17.064 
+##   104  52.000 1649.000 31.000 33.792 4.328 25.272 42.312 17.040 
+## 
+## 
+## ---------------------------------- 
+## Plot 1: Distribution of Residuals 
+## Plot 2: Residuals vs Fitted Values 
+## Plot 3: ScatterPlot Matrix 
+## ----------------------------------
+\end{verbatim}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{4}
+\tightlist
+\item
+  Realice predicciones utilizando el conjunto de pruebas y evalue el
+  resultado con la métrica MSE.
+\end{enumerate}
+
+Pista:
+\url{https://www.rdocumentation.org/packages/mltools/versions/0.3.5/topics/mse}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# mse(preds = NULL, actuals = NULL, weights = 1, na.rm = FALSE)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{5}
+\tightlist
+\item
+  Opcional
+\end{enumerate}
+
+6.a Pruebe varios modelos que utilicen diferentes variables y comparar
+los resultados obtenidos
+
+6.b Investigar como implementar en R las técnicas de preprocesado y
+normalización vistas en clase y aplicarlas a los datos antes de pasarlos
+al modelo.
+
+
+\end{document}
