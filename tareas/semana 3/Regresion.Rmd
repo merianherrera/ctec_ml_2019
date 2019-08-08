@@ -59,13 +59,12 @@ correlaciones entre atributos
 <br>
 
 ```{r}
-get.mode <- function(v) {
-   uniqv <- unique(v)
-   uniqv[which.max(tabulate(match(v, uniqv)))]
-}
-# Reemplazar los valores en "0" dentro de la columna caballos de fuerza.
-hp_mode <- get.mode(autos$hp)
-autos$hp[autos$hp == 0] <- hp_mode
+
+```
+
+```{r}
+# Ya que tenemos valores en 0 dentro de la variable caballos de fuerza, necesitamos excluir esos datos para no afectar nuestros calculos.
+autos <- autos[!(autos$hp == 0),]
 
 # Llenar los valores nulos en la columna caballos de fuerza
 media_hp = median(autos$hp)
@@ -134,9 +133,15 @@ regresion_data_training
 5. Realice predicciones utilizando el conjunto de pruebas y evalue el resultado con la métrica MSE.
 
 Pista: https://www.rdocumentation.org/packages/mltools/versions/0.3.5/topics/mse
+
 ```{r}
+regresion_data_test = lessR::reg(mpg ~ hp + weight, 
+           data=autos_testing, dframe=autos_testing, 
+           sig.digits=4, res.rows=NULL, results="brief", scatter.cor=TRUE)
+
 
 # mse(preds = NULL, actuals = NULL, weights = 1, na.rm = FALSE)
+# mse(actual, predicted)
 ```
 
 6. Opcional
