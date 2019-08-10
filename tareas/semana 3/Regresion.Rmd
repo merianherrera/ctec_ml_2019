@@ -141,11 +141,29 @@ Nota: Al crear el modelo utilice el conjunto de datos de entrenamiento definido 
 
 ```{r}
 
-regresion_data_training = lessR::reg(mpg ~ hp + weight, 
+regresion_model = lessR::reg(mpg ~ hp + weight, 
            data=autos_training, dframe=autos_training, 
            sig.digits=4, res.rows=NULL, results="brief", scatter.cor=TRUE)
 
-regresion_data_training
+linear_model = lm(mpg ~ hp + weight, 
+           data=autos_training)
+```
+
+```{r}
+pred.int <- predict(linear_model, data=autos_testing, interval = "prediction")
+
+autos_predicted <- cbind(autos_training, pred.int)
+# 2. Regression line + confidence intervals
+p <- ggplot(autos_predicted, aes(mpg, hp)) +
+  geom_point() +
+  stat_smooth(method = lm)
+# 3. Add prediction intervals
+p + geom_line(aes(y = lwr), color = "red", linetype = "dashed")+
+    geom_line(aes(y = upr), color = "red", linetype = "dashed")
+```
+
+```{r}
+names(regresion_model)
 ```
 
 5. Realice predicciones utilizando el conjunto de pruebas y evalue el resultado con la métrica MSE.
@@ -153,8 +171,15 @@ regresion_data_training
 Pista: https://www.rdocumentation.org/packages/mltools/versions/0.3.5/topics/mse
 
 ```{r}
+mpg_predict <- predict(linear_model, newdata = autos_testing)  # predict mpg
+head(mpg_predict)
+#mpg_predict
+#?predict
+#linear_model$terms
+#typeof(regresion_data_training)
 # mse(preds = NULL, actuals = NULL, weights = 1, na.rm = FALSE)
-# mse(actual, predicted)
+#?mse
+# mse(linear_model, mpg_predict)
 ```
 
 6. Opcional
