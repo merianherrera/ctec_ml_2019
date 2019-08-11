@@ -52,55 +52,14 @@ head(autos, 400)
 ```
 
 2. Utilizando Ggpairs cree un gráfico de los atributos del dataset, observe las 
-correlaciones entre atributos
+correlaciones entre atributos <br>
 
-<br>
 **Histogramas:**
 
 ```{r}
 hist(autos$mpg)
 hist(autos$weight)
 hist(autos$disp)
-
-hist(orderNorm(autos$mpg)$x.t, col="#cfbae1",border="#c59fc9")
-hist(orderNorm(autos$weight)$x.t, col="#cfbae1",border="#c59fc9")
-hist(orderNorm(autos$disp)$x.t, col="#cfbae1",border="#c59fc9")
-```
-
-<br>
-**Preparacion de los datos:**
-<br>
-
-```{r}
-# Ya que tenemos valores en 0 dentro de la variable caballos de fuerza, necesitamos excluir esos datos para no afectar nuestros calculos.
-autos <- autos[!(autos$hp == 0),]
-
-# Llenar los valores nulos en la columna caballos de fuerza
-media_hp = median(autos$hp)
-autos$hp[is.na(autos$hp)] <- media_hp
-
-# Dividir los valores de la columna modelo para extraer solo el fabricante, ya que al tener 305 modelos estabamos perdiendo variabilidad en los datos
-autos <- autos %>% separate(model.name, 
-                c("manufacturer"))
-
-# Normalizar las variables que vamos a usar
-mpg_normalized <- orderNorm(autos$mpg)$x.t
-weight_normalized <- orderNorm(autos$weight)$x.t
-disp_normalized <- orderNorm(autos$disp)$x.t
-hp_normalized <- orderNorm(autos$hp)$x.t
-
-autos$mpg <- mpg_normalized
-autos$weight <- weight_normalized
-autos$disp <- disp_normalized
-autos$hp <- hp_normalized
-head(autos, 400)
-```
-
-```{r}
-hist(autos$mpg)
-hist(autos$weight)
-hist(autos$disp)
-hist(autos$hp)
 ```
 
 ```{r}
@@ -150,20 +109,7 @@ linear_model = lm(mpg ~ hp + weight,
 ```
 
 ```{r}
-pred.int <- predict(linear_model, data=autos_testing, interval = "prediction")
-
-autos_predicted <- cbind(autos_training, pred.int)
-# 2. Regression line + confidence intervals
-p <- ggplot(autos_predicted, aes(mpg, hp)) +
-  geom_point() +
-  stat_smooth(method = lm)
-# 3. Add prediction intervals
-p + geom_line(aes(y = lwr), color = "red", linetype = "dashed")+
-    geom_line(aes(y = upr), color = "red", linetype = "dashed")
-```
-
-```{r}
-names(regresion_model)
+names(linear_model)
 ```
 
 5. Realice predicciones utilizando el conjunto de pruebas y evalue el resultado con la métrica MSE.
@@ -172,21 +118,139 @@ Pista: https://www.rdocumentation.org/packages/mltools/versions/0.3.5/topics/mse
 
 ```{r}
 mpg_predict <- predict(linear_model, newdata = autos_testing)  # predict mpg
-head(mpg_predict)
-#mpg_predict
-#?predict
-#linear_model$terms
-#typeof(regresion_data_training)
-# mse(preds = NULL, actuals = NULL, weights = 1, na.rm = FALSE)
-#?mse
-# mse(linear_model, mpg_predict)
+mse(autos_testing$mpg, mpg_predict)
 ```
 
 6. Opcional
 
-6.a Pruebe varios modelos que utilicen diferentes variables y comparar los resultados obtenidos
+6.a Pruebe varios modelos que utilicen diferentes variables y comparar los resultados obtenidos <br>
 
-6.b Investigar como implementar en R las técnicas de preprocesado y normalización vistas en clase y aplicarlas a los datos antes de pasarlos al modelo.
+**mpg ~ hp + weight**
 
+```{r}
+linear_model_hp_weight = lm(mpg ~ hp + weight, 
+                  data=autos_training)
 
+mpg_predict <- predict(linear_model_hp_weight, newdata = autos_testing)  
+mse(autos_testing$mpg, mpg_predict)
+```
+
+<br>
+
+**mpg ~ disp + weight**
+
+```{r}
+linear_model_disp_weight = lm(mpg ~ disp + weight, 
+                  data=autos_training)
+
+mpg_predict <- predict(linear_model_disp_weight, newdata = autos_testing)  
+mse(autos_testing$mpg, mpg_predict)
+```
+
+<br>
+
+**mpg ~ acc + disp**
+
+```{r}
+linear_model_acc_disp = lm(mpg ~ acc + disp, 
+                  data=autos_training)
+
+mpg_predict <- predict(linear_model_acc_disp, newdata = autos_testing)  
+mse(autos_testing$mpg, mpg_predict)
+```
+
+<br>
+
+6.b Investigar como implementar en R las técnicas de preprocesado y normalización vistas en clase y aplicarlas a los datos antes de pasarlos al modelo. <br>
+
+**Carga de los Datos** <br>
+
+```{r}
+autos <- read_csv("auto-mpg_g.csv")
+head(autos, 400)
+```
+
+<br>
+
+**Datos antes de normalizar vs normalizados** <br>
+
+```{r}
+hist(autos$mpg)
+hist(autos$weight)
+hist(autos$disp)
+
+hist(orderNorm(autos$mpg)$x.t, col="#cfbae1",border="#c59fc9")
+hist(orderNorm(autos$weight)$x.t, col="#cfbae1",border="#c59fc9")
+hist(orderNorm(autos$disp)$x.t, col="#cfbae1",border="#c59fc9")
+```
+
+<br>
+
+**Preparacion de los datos:** <br>
+
+```{r}
+# Ya que tenemos valores en 0 dentro de la variable caballos de fuerza, necesitamos excluir esos datos para no afectar nuestros calculos.
+autos <- autos[!(autos$hp == 0),]
+
+# Llenar los valores nulos en la columna caballos de fuerza
+media_hp = median(autos$hp)
+autos$hp[is.na(autos$hp)] <- media_hp
+
+# Dividir los valores de la columna modelo para extraer solo el fabricante, ya que al tener 305 modelos estabamos perdiendo variabilidad en los datos
+autos <- autos %>% separate(model.name, 
+                c("manufacturer"))
+
+# Normalizar las variables que vamos a usar
+mpg_normalized <- orderNorm(autos$mpg)$x.t
+weight_normalized <- orderNorm(autos$weight)$x.t
+disp_normalized <- orderNorm(autos$disp)$x.t
+hp_normalized <- orderNorm(autos$hp)$x.t
+
+autos$mpg <- mpg_normalized
+autos$weight <- weight_normalized
+autos$disp <- disp_normalized
+autos$hp <- hp_normalized
+head(autos, 400)
+```
+
+<br>
+
+**Correlaciones** <br>
+
+```{r}
+ggpairs(autos,columns = c(1, 3, 4, 5, 6, 7))
+```
+
+<br>
+
+**Dividir Datos** <br>
+
+```{r}
+set.seed(124)
+
+y =  dplyr::pull(autos, mpg)
+
+autos$dividir_datos <- sample.split(y, SplitRatio=0.70)
+
+autos_training = subset(autos, autos$dividir_datos==TRUE)
+autos_testing = subset(autos, autos$dividir_datos==FALSE)
+```
+
+<br>
+
+**Modelo Lineal** <br>
+
+```{r}
+linear_model = lm(mpg ~ hp + weight, 
+                  data=autos_training)
+```
+
+<br>
+
+**Evaluacion del modelo**<br>
+
+```{r}
+mpg_predict <- predict(linear_model, newdata = autos_testing)  # predict mpg
+mse(autos_testing$mpg, mpg_predict)
+```
 
