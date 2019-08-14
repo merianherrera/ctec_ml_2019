@@ -163,6 +163,97 @@ mse(autos_testing$mpg, mpg_predict)
 
 6.b Investigar como implementar en R las técnicas de preprocesado y normalización vistas en clase y aplicarlas a los datos antes de pasarlos al modelo. <br>
 
+#### **Normalizando con tecnicas aprendidas en clase**
+
+**Carga de los Datos** <br>
+
+```{r}
+autos <- read_csv("auto-mpg_g.csv")
+head(autos, 400)
+```
+
+<br>
+
+**Datos antes de normalizar vs normalizados** <br>
+
+```{r}
+hist(autos$mpg)
+hist(autos$weight)
+hist(autos$disp)
+
+hist(log(autos$mpg), col="#cfbae1",border="#c59fc9")
+hist(autos$weight, col="#cfbae1",border="#c59fc9")
+hist(autos$disp, col="#cfbae1",border="#c59fc9")
+```
+
+<br>
+
+**Preparacion de los datos:** <br>
+
+```{r}
+# Ya que tenemos valores en 0 dentro de la variable caballos de fuerza, necesitamos excluir esos datos para no afectar nuestros calculos.
+autos <- autos[!(autos$hp == 0),]
+
+# Llenar los valores nulos en la columna caballos de fuerza
+media_hp = median(autos$hp)
+autos$hp[is.na(autos$hp)] <- media_hp
+
+# Dividir los valores de la columna modelo para extraer solo el fabricante, ya que al tener 305 modelos estabamos perdiendo variabilidad en los datos
+autos <- autos %>% separate(model.name, 
+                c("manufacturer"))
+
+# Normalizar las variables que vamos a usar
+mpg_normalized <- log(autos$mpg)
+
+autos$mpg <- mpg_normalized
+head(autos, 400)
+```
+
+<br>
+
+**Correlaciones** <br>
+
+```{r}
+ggpairs(autos,columns = c(1, 3, 4, 5, 6, 7))
+```
+
+<br>
+
+**Dividir Datos** <br>
+
+```{r}
+set.seed(124)
+
+y =  dplyr::pull(autos, mpg)
+
+autos$dividir_datos <- sample.split(y, SplitRatio=0.70)
+
+autos_training = subset(autos, autos$dividir_datos==TRUE)
+autos_testing = subset(autos, autos$dividir_datos==FALSE)
+```
+
+<br>
+
+**Modelo Lineal** <br>
+
+```{r}
+linear_model = lm(mpg ~ hp + weight, 
+                  data=autos_training)
+```
+
+<br>
+
+**Evaluacion del modelo**<br>
+
+```{r}
+mpg_predict <- predict(linear_model, newdata = autos_testing)  # predict mpg
+mse(autos_testing$mpg, mpg_predict)
+```
+
+#### **Ejemplo usando la libreria BestNorm**
+
+<br>
+
 **Carga de los Datos** <br>
 
 ```{r}

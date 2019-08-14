@@ -558,6 +558,11 @@ los resultados obtenidos
 normalización vistas en clase y aplicarlas a los datos antes de pasarlos
 al modelo.
 
+\hypertarget{normalizando-con-tecnicas-aprendidas-en-clase}{%
+\paragraph{\texorpdfstring{\textbf{Normalizando con tecnicas aprendidas
+en
+clase}}{Normalizando con tecnicas aprendidas en clase}}\label{normalizando-con-tecnicas-aprendidas-en-clase}}
+
 \textbf{Carga de los Datos}
 
 \begin{Shaded}
@@ -632,7 +637,7 @@ al modelo.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\KeywordTok{hist}\NormalTok{(}\KeywordTok{orderNorm}\NormalTok{(autos}\OperatorTok{$}\NormalTok{mpg)}\OperatorTok{$}\NormalTok{x.t, }\DataTypeTok{col=}\StringTok{"#cfbae1"}\NormalTok{,}\DataTypeTok{border=}\StringTok{"#c59fc9"}\NormalTok{)}
+\KeywordTok{hist}\NormalTok{(}\KeywordTok{log}\NormalTok{(autos}\OperatorTok{$}\NormalTok{mpg), }\DataTypeTok{col=}\StringTok{"#cfbae1"}\NormalTok{,}\DataTypeTok{border=}\StringTok{"#c59fc9"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -640,7 +645,7 @@ al modelo.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\KeywordTok{hist}\NormalTok{(}\KeywordTok{orderNorm}\NormalTok{(autos}\OperatorTok{$}\NormalTok{weight)}\OperatorTok{$}\NormalTok{x.t, }\DataTypeTok{col=}\StringTok{"#cfbae1"}\NormalTok{,}\DataTypeTok{border=}\StringTok{"#c59fc9"}\NormalTok{)}
+\KeywordTok{hist}\NormalTok{(autos}\OperatorTok{$}\NormalTok{weight, }\DataTypeTok{col=}\StringTok{"#cfbae1"}\NormalTok{,}\DataTypeTok{border=}\StringTok{"#c59fc9"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -648,11 +653,198 @@ al modelo.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\KeywordTok{hist}\NormalTok{(}\KeywordTok{orderNorm}\NormalTok{(autos}\OperatorTok{$}\NormalTok{disp)}\OperatorTok{$}\NormalTok{x.t, }\DataTypeTok{col=}\StringTok{"#cfbae1"}\NormalTok{,}\DataTypeTok{border=}\StringTok{"#c59fc9"}\NormalTok{)}
+\KeywordTok{hist}\NormalTok{(autos}\OperatorTok{$}\NormalTok{disp, }\DataTypeTok{col=}\StringTok{"#cfbae1"}\NormalTok{,}\DataTypeTok{border=}\StringTok{"#c59fc9"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
 \includegraphics{Regresion_files/figure-latex/unnamed-chunk-15-6.pdf}
+
+\textbf{Preparacion de los datos:}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# Ya que tenemos valores en 0 dentro de la variable caballos de fuerza, necesitamos excluir esos datos para no afectar nuestros calculos.}
+\NormalTok{autos <-}\StringTok{ }\NormalTok{autos[}\OperatorTok{!}\NormalTok{(autos}\OperatorTok{$}\NormalTok{hp }\OperatorTok{==}\StringTok{ }\DecValTok{0}\NormalTok{),]}
+
+\CommentTok{# Llenar los valores nulos en la columna caballos de fuerza}
+\NormalTok{media_hp =}\StringTok{ }\KeywordTok{median}\NormalTok{(autos}\OperatorTok{$}\NormalTok{hp)}
+\NormalTok{autos}\OperatorTok{$}\NormalTok{hp[}\KeywordTok{is.na}\NormalTok{(autos}\OperatorTok{$}\NormalTok{hp)] <-}\StringTok{ }\NormalTok{media_hp}
+
+\CommentTok{# Dividir los valores de la columna modelo para extraer solo el fabricante, ya que al tener 305 modelos estabamos perdiendo variabilidad en los datos}
+\NormalTok{autos <-}\StringTok{ }\NormalTok{autos }\OperatorTok{%>%}\StringTok{ }\KeywordTok{separate}\NormalTok{(model.name, }
+                \KeywordTok{c}\NormalTok{(}\StringTok{"manufacturer"}\NormalTok{))}
+
+\CommentTok{# Normalizar las variables que vamos a usar}
+\NormalTok{mpg_normalized <-}\StringTok{ }\KeywordTok{log}\NormalTok{(autos}\OperatorTok{$}\NormalTok{mpg)}
+
+\NormalTok{autos}\OperatorTok{$}\NormalTok{mpg <-}\StringTok{ }\NormalTok{mpg_normalized}
+\KeywordTok{head}\NormalTok{(autos, }\DecValTok{400}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 392 x 9
+##      mpg   cyl  disp    hp weight   acc model.year origin manufacturer
+##    <dbl> <dbl> <dbl> <dbl>  <dbl> <dbl>      <dbl>  <dbl> <chr>       
+##  1  2.89     8   307   130   3504    12         70      1 chevrolet   
+##  2  2.71     8   350   165   3693    12         70      1 buick       
+##  3  2.89     8   318   150   3436    11         70      1 plymouth    
+##  4  2.77     8   304   150   3433    12         70      1 amc         
+##  5  2.83     8   302   140   3449    11         70      1 ford        
+##  6  2.71     8   429   198   4341    10         70      1 ford        
+##  7  2.64     8   454   220   4354     9         70      1 chevrolet   
+##  8  2.64     8   440   215   4312     9         70      1 plymouth    
+##  9  2.64     8   455   225   4425    10         70      1 pontiac     
+## 10  2.71     8   390   190   3850     9         70      1 amc         
+## # ... with 382 more rows
+\end{verbatim}
+
+\textbf{Correlaciones}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{ggpairs}\NormalTok{(autos,}\DataTypeTok{columns =} \KeywordTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{3}\NormalTok{, }\DecValTok{4}\NormalTok{, }\DecValTok{5}\NormalTok{, }\DecValTok{6}\NormalTok{, }\DecValTok{7}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Regresion_files/figure-latex/unnamed-chunk-17-1.pdf}
+
+\textbf{Dividir Datos}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{set.seed}\NormalTok{(}\DecValTok{124}\NormalTok{)}
+
+\NormalTok{y =}\StringTok{  }\NormalTok{dplyr}\OperatorTok{::}\KeywordTok{pull}\NormalTok{(autos, mpg)}
+
+\NormalTok{autos}\OperatorTok{$}\NormalTok{dividir_datos <-}\StringTok{ }\KeywordTok{sample.split}\NormalTok{(y, }\DataTypeTok{SplitRatio=}\FloatTok{0.70}\NormalTok{)}
+
+\NormalTok{autos_training =}\StringTok{ }\KeywordTok{subset}\NormalTok{(autos, autos}\OperatorTok{$}\NormalTok{dividir_datos}\OperatorTok{==}\OtherTok{TRUE}\NormalTok{)}
+\NormalTok{autos_testing =}\StringTok{ }\KeywordTok{subset}\NormalTok{(autos, autos}\OperatorTok{$}\NormalTok{dividir_datos}\OperatorTok{==}\OtherTok{FALSE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\textbf{Modelo Lineal}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{linear_model =}\StringTok{ }\KeywordTok{lm}\NormalTok{(mpg }\OperatorTok{~}\StringTok{ }\NormalTok{hp }\OperatorTok{+}\StringTok{ }\NormalTok{weight, }
+                  \DataTypeTok{data=}\NormalTok{autos_training)}
+\end{Highlighting}
+\end{Shaded}
+
+\textbf{Evaluacion del modelo}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{mpg_predict <-}\StringTok{ }\KeywordTok{predict}\NormalTok{(linear_model, }\DataTypeTok{newdata =}\NormalTok{ autos_testing)  }\CommentTok{# predict mpg}
+\KeywordTok{mse}\NormalTok{(autos_testing}\OperatorTok{$}\NormalTok{mpg, mpg_predict)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.02530576
+\end{verbatim}
+
+\hypertarget{ejemplo-usando-la-libreria-bestnorm}{%
+\paragraph{\texorpdfstring{\textbf{Ejemplo usando la libreria
+BestNorm}}{Ejemplo usando la libreria BestNorm}}\label{ejemplo-usando-la-libreria-bestnorm}}
+
+\textbf{Carga de los Datos}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{autos <-}\StringTok{ }\KeywordTok{read_csv}\NormalTok{(}\StringTok{"auto-mpg_g.csv"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Parsed with column specification:
+## cols(
+##   mpg = col_double(),
+##   cyl = col_double(),
+##   disp = col_double(),
+##   hp = col_double(),
+##   weight = col_double(),
+##   acc = col_double(),
+##   model.year = col_double(),
+##   origin = col_double(),
+##   model.name = col_character()
+## )
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{head}\NormalTok{(autos, }\DecValTok{400}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 398 x 9
+##      mpg   cyl  disp    hp weight   acc model.year origin model.name       
+##    <dbl> <dbl> <dbl> <dbl>  <dbl> <dbl>      <dbl>  <dbl> <chr>            
+##  1    18     8   307   130   3504    12         70      1 chevrolet chevel~
+##  2    15     8   350   165   3693    12         70      1 buick skylark 320
+##  3    18     8   318   150   3436    11         70      1 plymouth satelli~
+##  4    16     8   304   150   3433    12         70      1 amc rebel sst    
+##  5    17     8   302   140   3449    11         70      1 ford torino      
+##  6    15     8   429   198   4341    10         70      1 ford galaxie 500 
+##  7    14     8   454   220   4354     9         70      1 chevrolet impala 
+##  8    14     8   440   215   4312     9         70      1 plymouth fury iii
+##  9    14     8   455   225   4425    10         70      1 pontiac catalina 
+## 10    15     8   390   190   3850     9         70      1 amc ambassador d~
+## # ... with 388 more rows
+\end{verbatim}
+
+\textbf{Datos antes de normalizar vs normalizados}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{hist}\NormalTok{(autos}\OperatorTok{$}\NormalTok{mpg)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Regresion_files/figure-latex/unnamed-chunk-22-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{hist}\NormalTok{(autos}\OperatorTok{$}\NormalTok{weight)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Regresion_files/figure-latex/unnamed-chunk-22-2.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{hist}\NormalTok{(autos}\OperatorTok{$}\NormalTok{disp)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Regresion_files/figure-latex/unnamed-chunk-22-3.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{hist}\NormalTok{(}\KeywordTok{orderNorm}\NormalTok{(autos}\OperatorTok{$}\NormalTok{mpg)}\OperatorTok{$}\NormalTok{x.t, }\DataTypeTok{col=}\StringTok{"#cfbae1"}\NormalTok{,}\DataTypeTok{border=}\StringTok{"#c59fc9"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Regresion_files/figure-latex/unnamed-chunk-22-4.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{hist}\NormalTok{(}\KeywordTok{orderNorm}\NormalTok{(autos}\OperatorTok{$}\NormalTok{weight)}\OperatorTok{$}\NormalTok{x.t, }\DataTypeTok{col=}\StringTok{"#cfbae1"}\NormalTok{,}\DataTypeTok{border=}\StringTok{"#c59fc9"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Regresion_files/figure-latex/unnamed-chunk-22-5.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{hist}\NormalTok{(}\KeywordTok{orderNorm}\NormalTok{(autos}\OperatorTok{$}\NormalTok{disp)}\OperatorTok{$}\NormalTok{x.t, }\DataTypeTok{col=}\StringTok{"#cfbae1"}\NormalTok{,}\DataTypeTok{border=}\StringTok{"#c59fc9"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Regresion_files/figure-latex/unnamed-chunk-22-6.pdf}
 
 \textbf{Preparacion de los datos:}
 
@@ -708,7 +900,7 @@ al modelo.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{Regresion_files/figure-latex/unnamed-chunk-17-1.pdf}
+\includegraphics{Regresion_files/figure-latex/unnamed-chunk-24-1.pdf}
 
 \textbf{Dividir Datos}
 
