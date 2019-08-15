@@ -1,0 +1,186 @@
+---
+title: "K-Means"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Tarea 4.
+# Metodos no supervisados
+
+# Estudiante
+* Merian Herrera Fuentes
+* meryann68@gmail.com
+* 207180364
+
+# Ejercicios 
+
+Librerias
+```{r warning=FALSE,echo=FALSE}
+library(ggplot2)
+library(readr)
+library(dplyr)
+library(GGally)
+library(reshape)
+```
+
+**1. Desarolle el Análisis del Problema** <br>
+
+Análisis del Problema <br><br>
+
+
+**2. Cargue el archivo Wholesale customers data.csv en una variable**
+
+```{r}
+customers <- read_csv('Wholesale.csv')
+
+
+customers$Region <- as.factor(customers$Region)
+customers$Channel <- as.factor(customers$Channel)
+head(customers, 500)
+```
+
+<br>
+
+**3. Desarolle el Entendimiento de los Datos** <br>
+
+Con el fin de analizar y agrupar los clientes por los productos que consumen, se trabajó con un conjunto de datos que contiene 440 observaciones y 8 variables: <br>
+
+1)	FRESH: Consumo anual de productos frescos (continua)
+
+```{r}
+summary(customers$Fresh)
+```
+
+2)	MILK: Consumo anual de leche o productos a base de la misma (Continua)
+
+```{r}
+summary(customers$Milk)
+```
+
+3)	GROCERY: Consumo anual de comestibles (Continua)
+
+```{r}
+summary(customers$Grocery)
+```
+
+4)	FROZEN: Consumo anual de productos congelados (Continua) 
+
+```{r}
+summary(customers$Frozen)
+```
+
+5)	DETERGENTS_PAPER: Consumo anual de detergentes y productos a base de papel (Continua)
+
+```{r}
+summary(customers$Detergents_Paper)
+```
+
+6)	DELICATESSEN: Consumo anual de productos delicassen. (Continua); 
+
+```{r}
+summary(customers$Delicassen)
+```
+
+7)	CHANNEL: Canal de consumo (Categorica) <br>
+* 1: Horeca (Hotel/Restaurant/Cafe) 
+* 2: Retail channel 
+
+```{r}
+customers %>% 
+  group_by(Channel) %>% 
+  summarise(count = n()) 
+```
+
+8)	REGION: Region del cosumidor (Categorica) <br>
+* 1: Lisbon
+* 2: Porto
+* 3: other region
+
+```{r}
+customers %>% 
+  group_by(Region) %>% 
+  summarise(count = n()) 
+```
+
+Ademas, se puede concluir que no existen valores nulos en el dataset.
+
+Fuente del dataset: <br>
+https://archive.ics.uci.edu/ml/datasets/Wholesale+customers
+
+**4. Utilizando barplot cree un gráfico de los atributos del dataset, observe las correlaciones entre atributos**
+
+
+```{r}
+cust_gb <- customers %>% 
+  group_by(Region, Channel) %>% 
+  summarise(count = n()) 
+
+ggplot(data=cust_gb, aes(x=Region, y=count, fill=Channel)) +
+  geom_bar(stat="identity")
+```
+
+```{r}
+ggpairs(customers,columns = c(3, 4, 5, 6, 7, 8))
+```
+
+**5. Explique el siguiente gráfico**
+
+```{r}
+#Grafico
+
+bxplt <- ggplot(data = melt(customers), aes(x= variable, y = value))
+bxplt <- bxplt + geom_boxplot()
+bxplt <- bxplt + facet_wrap(~Channel)
+bxplt <- bxplt + coord_flip()
+bxplt <- bxplt + labs(x = 'producto', y  = 'ventas')
+bxplt <- bxplt + ggtitle('Ventas por producto y por canal')
+bxplt
+```
+
+6. Cree un modelo de agrupación K- Means
+Para agrupar a los clientes con base al consumo, vamos a utilizar solo las variables Fresh, Milk, Grocery, Frozen, Detergents_Paper y Delicassen. En este caso, vamos a intentar agrupar los clientes en 5 grupos diferentes.
+
+
+```{r}
+# Escriba su código aqui
+
+#5 Centroides utilizando k-means
+#modelo.agrupacion <- kmeans(Wholesale[,c(3:8)], centers = 5)
+
+#predecir utilizando el modelo para agregar una variable nueva llamada 'cluster' al conjunto de datos
+#Wholesale$cluster <- modelo.agrupacion$cluster
+
+#convertir la variable nueva a un factor
+#Wholesale$cluster <- factor(Wholesale$cluster)
+
+```
+
+6. Realice al menos 3 modelos cambiando los centroides 
+```{r}
+# Escriba su código aqui
+```
+
+7. Evaluacioón del modelo
+```{r}
+# Escriba su código aqui
+#Explicacion de los grupos generados
+#by(Wholesale, Wholesale$cluster, summary)
+```
+
+
+8. Desarolle al menos 5 conclusiones sobre los grupos realizados
+  * Ejemplo:
+    - Las principales características de cada grupo son:
+      - #### Grupo #1: (2do grupo más pequeño)
+      - Principalmente observaciones de la región 3 y el canal 1.
+      - Muy alto consumo de productos frescos.
+      - Bajo consumo de leche.
+      - Bajo consumo de comestibles.
+      - Alto consumo de alimentos congelados.
+      - Bajo consumo de detergentes.
+      - Bajo consumo de delicassen.
+
+
