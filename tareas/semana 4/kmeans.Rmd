@@ -129,49 +129,121 @@ ggpairs(customers,columns = c(3, 4, 5, 6, 7, 8))
 **5. Explique el siguiente gráfico**
 
 ```{r}
-#Grafico
+customers_df <- as.data.frame(customers)
+customers_melted <- melt(data=customers_df, id.vars = c("Region", "Channel"))
 
-bxplt <- ggplot(data = melt(customers), aes(x= variable, y = value))
+# BoxPlot
+bxplt <- ggplot(data = customers_melted, aes(x= variable, y = value, fill=Channel))
 bxplt <- bxplt + geom_boxplot()
 bxplt <- bxplt + facet_wrap(~Channel)
 bxplt <- bxplt + coord_flip()
 bxplt <- bxplt + labs(x = 'producto', y  = 'ventas')
-bxplt <- bxplt + ggtitle('Ventas por producto y por canal')
+bxplt <- bxplt + ggtitle('Consumo por producto y por canal')
 bxplt
 ```
 
-6. Cree un modelo de agrupación K- Means
+Los box plots son graficos usados para representar unicamente variables continuas y en ellos podemos ver la distribucion de nuestros datos y encontrar la mayor concentracion de los mismos, asi como observar la varianza que existe. <br><br>
+
+Tenemos una representacion por cada producto listado en el dataset, podemos ver los siguientes datos representados en cada una de las figuras: <br>
+* Percentil 25 o cuartil 1: Este esta representado por la linea dibujada del 0 hasta el inicio de la figura de caja. <br>
+* Cuartiles 2 y 3: Estos los vemos representados en la caja, aqui podemos observar la varianza de los datos asi como la mediana. <br>
+* Cuartil 4: Lo vemos representado en la lnea que comienza justo despues de que termina la caja. <br>
+* outliers: Los valores atipicos o expremos los vemos representados por puntos en el grafico. <br><br>
+
+En el canal 1 podemos observar una alta varianza entre los datos de consumo de porductos frescos, mientras que observamos que el consumo de productos a base de leche es muy similar en todos los clientes.<br><br>
+Para el canal 2 observamos una alta varianza en comestibles, productos a base de leche y productos frescos. <br>
+
+**6. Cree un modelo de agrupación K- Means** <br>
 Para agrupar a los clientes con base al consumo, vamos a utilizar solo las variables Fresh, Milk, Grocery, Frozen, Detergents_Paper y Delicassen. En este caso, vamos a intentar agrupar los clientes en 5 grupos diferentes.
 
+```{r}
+set.seed(4)
+
+customers_matriz = as.matrix(customers[,c(3:8)])
+
+# 5 Centroides utilizando k-means
+modelo.agrupacion <- kmeans(customers_matriz, centers = 5)
+
+# predecir utilizando el modelo para agregar una variable nueva llamada 'cluster' al conjunto de datos
+customers$cluster <- modelo.agrupacion$cluster
+
+# convertir la variable nueva a un factor
+customers$cluster <- factor(customers$cluster)
+```
 
 ```{r}
-# Escriba su código aqui
+plot(customers_matriz, 
+     col = (modelo.agrupacion$cluster + 1), 
+     main = "K-Means Clustering Results with K=5", 
+     xlab = "", 
+     ylab = "",
+     pch = 20, 
+     cex = 2)
+```
 
-#5 Centroides utilizando k-means
-#modelo.agrupacion <- kmeans(Wholesale[,c(3:8)], centers = 5)
 
-#predecir utilizando el modelo para agregar una variable nueva llamada 'cluster' al conjunto de datos
-#Wholesale$cluster <- modelo.agrupacion$cluster
+**6. Realice al menos 3 modelos cambiando los centroides**
+```{r}
+modelo.dos.centroides <- kmeans(customers_matriz, centers = 2)
 
-#convertir la variable nueva a un factor
-#Wholesale$cluster <- factor(Wholesale$cluster)
+plot(customers_matriz, 
+     col = (modelo.dos.centroides$cluster + 1), 
+     main = "K-Means Clustering Results with K=5", 
+     xlab = "", 
+     ylab = "",
+     pch = 20, 
+     cex = 2)
 
 ```
 
-6. Realice al menos 3 modelos cambiando los centroides 
 ```{r}
-# Escriba su código aqui
+modelo.tres.centroides <- kmeans(customers_matriz, centers = 3)
+
+plot(customers_matriz, 
+     col = (modelo.tres.centroides$cluster + 1), 
+     main = "K-Means Clustering Results with K=3", 
+     xlab = "", 
+     ylab = "",
+     pch = 20, 
+     cex = 2)
+
 ```
 
-7. Evaluacioón del modelo
 ```{r}
-# Escriba su código aqui
-#Explicacion de los grupos generados
-#by(Wholesale, Wholesale$cluster, summary)
+modelo.cuatro.centroides <- kmeans(customers_matriz, centers = 4)
+
+plot(customers_matriz, 
+     col = (modelo.cuatro.centroides$cluster + 1), 
+     main = "K-Means Clustering Results with K=4", 
+     xlab = "", 
+     ylab = "",
+     pch = 20, 
+     cex = 2)
+
 ```
 
+**7. Evaluación del modelo**
+```{r}
+#Explicacion Modelo 5 Centroides
+by(customers, customers$cluster, summary)
+```
 
-8. Desarolle al menos 5 conclusiones sobre los grupos realizados
+```{r}
+#Explicacion Modelo 2 Centroides
+by(customers, modelo.dos.centroides$cluster, summary)
+```
+
+```{r}
+#Explicacion Modelo 3 Centroides
+by(customers, modelo.tres.centroides$cluster, summary)
+```
+
+```{r}
+#Explicacion Modelo 4 Centroides
+by(customers, modelo.cuatro.centroides$cluster, summary)
+```
+
+**8. Desarolle al menos 5 conclusiones sobre los grupos realizados**
   * Ejemplo:
     - Las principales características de cada grupo son:
       - #### Grupo #1: (2do grupo más pequeño)
