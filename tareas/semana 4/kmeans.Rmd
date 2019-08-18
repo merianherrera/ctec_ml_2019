@@ -24,11 +24,14 @@ library(readr)
 library(dplyr)
 library(GGally)
 library(reshape)
+library(corrplot)
 ```
 
 **1. Desarolle el Análisis del Problema** <br>
 
-Análisis del Problema <br><br>
+En el siguiente dataset podemos observar datos sobre compras al por mayor de ariculos como comestibles, papel, detergente, productos frescos... tambien, tenemos el medio por el cual fueron adquiridos los productos y la region donde los mismos fueron comprados. <br> <br>
+
+Se desea aplicar un algoritmo k-means para agrupar dichos clientes, esto puede ser de utilidad por ejemplo para identificar grupos de clientes y dirigir campañas de mercadeo a esos sectores en especifico.
 
 
 **2. Cargue el archivo Wholesale customers data.csv en una variable**
@@ -36,9 +39,9 @@ Análisis del Problema <br><br>
 ```{r}
 customers <- read_csv('Wholesale.csv')
 
-
 customers$Region <- as.factor(customers$Region)
 customers$Channel <- as.factor(customers$Channel)
+
 head(customers, 500)
 ```
 
@@ -107,8 +110,38 @@ customers %>%
 
 Ademas, se puede concluir que no existen valores nulos en el dataset.
 
+```{r}
+sapply(customers, function(x) {sum(is.na(x))})
+```
+
+
 Fuente del dataset: <br>
-https://archive.ics.uci.edu/ml/datasets/Wholesale+customers
+https://archive.ics.uci.edu/ml/datasets/Wholesale+customers 
+
+<br>
+
+**Preparacion de los datos**
+
+```{r}
+customers$Fresh <- log(customers$Fresh)
+customers$Milk <- log(customers$Milk)
+customers$Detergents_Paper <- log(customers$Detergents_Paper)
+customers$Grocery <- log(customers$Grocery)
+customers$Frozen <- log(customers$Frozen)
+customers$Delicassen <- log(customers$Delicassen)
+```
+
+
+```{r}
+hist(customers$Fresh)
+hist(customers$Milk)
+hist(customers$Detergents_Paper)
+hist(customers$Grocery)
+hist(customers$Frozen)
+hist(customers$Delicassen)
+```
+
+
 
 **4. Utilizando barplot cree un gráfico de los atributos del dataset, observe las correlaciones entre atributos**
 
@@ -123,6 +156,15 @@ ggplot(data=cust_gb, aes(x=Region, y=count, fill=Channel)) +
 ```
 
 ```{r}
+customers  %>% 
+  select(-c("Channel", "Region")) %>% 
+  log()  %>% 
+  cor() %>%  
+  corrplot.mixed()
+```
+
+
+```{r}
 ggpairs(customers,columns = c(3, 4, 5, 6, 7, 8))
 ```
 
@@ -133,7 +175,7 @@ customers_df <- as.data.frame(customers)
 customers_melted <- melt(data=customers_df, id.vars = c("Region", "Channel"))
 
 # BoxPlot
-bxplt <- ggplot(data = customers_melted, aes(x= variable, y = value, fill=Channel))
+bxplt <- ggplot(data = customers_melted, aes(x= variable, y = value, fill=Region))
 bxplt <- bxplt + geom_boxplot()
 bxplt <- bxplt + facet_wrap(~Channel)
 bxplt <- bxplt + coord_flip()
@@ -150,8 +192,8 @@ Tenemos una representacion por cada producto listado en el dataset, podemos ver 
 * Cuartil 4: Lo vemos representado en la lnea que comienza justo despues de que termina la caja. <br>
 * outliers: Los valores atipicos o expremos los vemos representados por puntos en el grafico. <br><br>
 
-En el canal 1 podemos observar una alta varianza entre los datos de consumo de porductos frescos, mientras que observamos que el consumo de productos a base de leche es muy similar en todos los clientes.<br><br>
-Para el canal 2 observamos una alta varianza en comestibles, productos a base de leche y productos frescos. <br>
+Con respecto a los datos que vemos representados en el grafico, podemos observar una alta varinza en los datos de la region 1, para el channel 1, mientras que para la region 2 podemos observar que su varianza es menor, lo que las compras realizadas por los clientes de esta region que compran mediante el canal 1 son muy similares.
+ <br>
 
 **6. Cree un modelo de agrupación K- Means** <br>
 Para agrupar a los clientes con base al consumo, vamos a utilizar solo las variables Fresh, Milk, Grocery, Frozen, Detergents_Paper y Delicassen. En este caso, vamos a intentar agrupar los clientes en 5 grupos diferentes.
@@ -244,15 +286,43 @@ by(customers, modelo.cuatro.centroides$cluster, summary)
 ```
 
 **8. Desarolle al menos 5 conclusiones sobre los grupos realizados**
-  * Ejemplo:
-    - Las principales características de cada grupo son:
-      - #### Grupo #1: (2do grupo más pequeño)
-      - Principalmente observaciones de la región 3 y el canal 1.
-      - Muy alto consumo de productos frescos.
-      - Bajo consumo de leche.
-      - Bajo consumo de comestibles.
-      - Alto consumo de alimentos congelados.
-      - Bajo consumo de detergentes.
-      - Bajo consumo de delicassen.
+  ## Modelo con 5 Centroides
+  
+  Las principales caracteristicas de cada grupo son: <br>
+  
+  #### **Grupo 01**
+  * La mayoria de las observaciones son de la region 3 (Other Regions) y el canal 2 (Retail).
+  * El consumo mas alto se da en los productos frescos.
+  * Alto consumo de productos lacteos.
+  * Alto consumo de productos comestibles.
+  * Bajo consumos de productos congelados y Delicassen.
+  
+   #### **Grupo 02**
+   * Es el grupo mas grande con 104 observaciones.
+   * Principalmente observaciones de la region 03 (Otras regiones) y el Canal 2 (Retail).
+   * Muy alto consumo de productos lacteos y comestibles.
+   * Alto consumo de productos frescos y detergentes.
+   * El consumo mas bajo se da en productos congelados.
+   
+   #### **Grupo 03**
+   * La mayoria de las observaciones son del canal 3 (Otras Regiones) y el canal 1 (Hoteles/ Restaurantes/ cafes).
+   * Muy alto consumo de productos frescos y alimentos congelados.
+   * Alto consumo de productos Delicassen.
+   * Alto consumo de productos lacteos.
+   * Bajo consumo de detergentes y papel.
+   
+   #### **Grupo 04**
+   * Todas las observaciones son del canal 1 (Hoteles/ Restaurantes/ cafes).
+   * En cuanto a las regiones, la mayoria de las observaciones son de la region 3 (Otras regiones).
+   * El consumo mas alto se da en productos frescos.
+   * Alto consumo de alimentos congelados, productos lacteos y comestibles.
+   * Bajo consumo de detergentes y papel.
+   
+   #### **Grupo 05**
+   * Es el grupo mas pequenno con solo 37 observaciones.
+   * Principalmente observaciones de la región 3 (Otras regiones) y el canal 3 (Retail).
+   * El consumo mas alto se da en productos comestibles.
+   * Alto consumo de detergentes y productos lacteos.
+   * Bajo consumo de productos frescos.
 
 
