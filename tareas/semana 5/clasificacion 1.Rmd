@@ -71,7 +71,24 @@ mushroom %>%
   summarise(count = n()) 
 ```
 
-**3. cap-color:** brown=n,buff=b,cinnamon=c,gray=g,green=r, pink=p,purple=u,red=e,white=w,yellow=y 
+**3. cap-color:** 
+* brown
+* buff
+* cinnamon
+* gray
+* green
+* pink
+* purple
+* red
+* white
+* yellow
+
+```{r}
+mushroom %>% 
+  group_by(cap_color) %>% 
+  summarise(count = n()) 
+```
+
 **4. bruises?:** bruises=t,no=f 
 **5. odor:** almond=a,anise=l,creosote=c,fishy=y,foul=f, musty=m,none=n,pungent=p,spicy=s 
 **6. gill-attachment:** attached=a,descending=d,free=f,notched=n 
