@@ -18,9 +18,11 @@ knitr::opts_chunk$set(echo = TRUE)
 Librerias
 ```{r}
 library(caTools)
-library(rpart)
-library(randomForest)
 library(dplyr)
+library(randomForest)
+library(rpart)
+library(rpart.plot)
+library(ROCR)
 ```
 
 ### 1. Desarolle el Análisis del Problema
@@ -116,19 +118,94 @@ glimpse(mushroom)
 
 ### 4. Utilizando barplot cree un gráfico de los atributos del dataset, observe las correlaciones entre atributos
 
-```{r}
-
-```
+Debido a que el dataset esta formado unicamente por variables categoricas, no se pueden calcular las correlaciones, ya que estas necesitan unicamente variables numericas ya que lo que realmente queremos analizar en una correlacion es cuanto crece/ decrece una variable con respecto a otra.
+Para observar el comportamiento de las variables usando graficos de barras, no tenemos un criterio valido para seleccionar maximo 3 variables y hacer 10 o mas graficos de barras, no aporta datos valiosos a nuestro analisis.
 
 
 ### 5. Realice al menos 3 modelos vistos en clase
-```{r}
 
+**Dividir los datos**
+
+```{r}
+set.seed(12)
+split_data <- sample.split(mushroom$class, SplitRatio = 0.7)
+
+mushroom_entrenamiento <- mushroom[split_data,]
+mushroom_prueba <- mushroom[!split_data,]
 ```
 
-### 6. Evaluación del modelo
 ```{r}
+barplot(table(mushroom_entrenamiento$class), main = 'Distribución de las clases en mushroom_entrenamiento', ylab = 'Observaciones', xlab = 'Clase')
 
+barplot(table(mushroom_prueba$class), main = 'Distribución de las clases en mushroom_prueba', ylab = 'Observaciones', xlab = 'Clase')
+```
+
+**1. Arbol de decision**
+
+```{r}
+modelo_arbol <- rpart(class ~ ., data = mushroom_entrenamiento[,-which(colnames(mushroom_entrenamiento) == "cap_shape")], method =  'class')
+
+
+predicciones <- predict(modelo_arbol, newdata = mushroom_prueba, type = 'prob')
+head(predicciones)
+
+rpart.plot(modelo_arbol,
+           shadow.col = "gray", 
+           main = "Clasificación de Hongos \n(Arbol de decisión)\n")
+```
+
+**2. Bosque Aleatorio**
+
+```{r}
+modelo_bosque <- randomForest(class ~ cap_shape + cap_surface + cap_color + odor + gill_attachment + gill_spacing + gill_spacing + gill_size + gill_color + stalk_shape + stalk_shape + stalk_root + stalk_surface_above_ring, data = mushroom_entrenamiento)
+
+predicciones_bosque <- predict(modelo_bosque, newdata = mushroom_prueba, type = 'class')
+head(predicciones_bosque, 50)
+```
+
+
+### 6. Evaluación del modelo
+
+**1. Evaluacion Arbol de decision**
+
+```{r}
+predicciones <- predict(modelo_arbol, newdata = mushroom_prueba, type = 'class')
+
+data <- table(mushroom_prueba$class, predicciones)
+
+exactitud_arbol <- (data[1,1] + data[2,2]) / sum(data)
+sensibilidad_arbol <- data[1,1] / (data[1,1] + data[1,2])
+precision_arbol <- data[1,1] / (data[1,1] + data[2,1] )
+especificidad_arbol <- data[2,2] / (data[1,2] + data[2,2])
+
+paste("* Exactitud Total del modelo Arbol de decision: ", exactitud_arbol)
+paste("* Sensibilidad del modelo Arbol de decision: ", sensibilidad_arbol)
+paste("* Precisión del modelo Arbol de decision: ", precision_arbol)
+paste("* Especificidad del modelo Arbol de decision: ", especificidad_arbol)
+```
+
+```{r}
+data
+```
+
+
+```{r}
+# ROC
+predicciones_arbol_roc = prediction(c(predicciones), c(mushroom_prueba[,'class']))
+as.numeric(performance(predicciones_arbol_roc, "auc")@y.values)
+
+plot(performance(predicciones_arbol_roc, "tpr", "fpr"),
+colorize = T,
+print.cutoffs.at = seq(0,1,by = 0.1),
+text.adj = c(-0.2,1.7),
+main = 'Curva ROC del modelo de Arbol de decision')
+```
+
+**2. Evaluacion del modelo Bosque Aleatorio**
+
+```{r}
+predicciones_bosque <- predict(modelo_bosque, newdata = mushroom_prueba, type = 'class')
+head(predicciones_bosque, 50)
 ```
 
 
