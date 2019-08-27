@@ -91,25 +91,260 @@ mushroom %>%
   summarise(count = n()) 
 ```
 
-**4. bruises?:** bruises=t,no=f 
-**5. odor:** almond=a,anise=l,creosote=c,fishy=y,foul=f, musty=m,none=n,pungent=p,spicy=s 
-**6. gill-attachment:** attached=a,descending=d,free=f,notched=n 
-**7. gill-spacing:** close=c,crowded=w,distant=d 
-**8. gill-size:** broad=b,narrow=n 
-**9. gill-color:** black=k,brown=n,buff=b,chocolate=h,gray=g, green=r,orange=o,pink=p,purple=u,red=e, white=w,yellow=y 
-**10. stalk-shape:** enlarging=e,tapering=t 
-**11. stalk-root:** bulbous=b,club=c,cup=u,equal=e, rhizomorphs=z,rooted=r,missing=? 
-**12. stalk-surface-above-ring:** fibrous=f,scaly=y,silky=k,smooth=s 
-**13. stalk-surface-below-ring:** fibrous=f,scaly=y,silky=k,smooth=s 
-**14. stalk-color-above-ring:** brown=n,buff=b,cinnamon=c,gray=g,orange=o, pink=p,red=e,white=w,yellow=y 
-**15. stalk-color-below-ring:** brown=n,buff=b,cinnamon=c,gray=g,orange=o, pink=p,red=e,white=w,yellow=y 
-**16. veil-type:** partial=p,universal=u 
-**17. veil-color:** brown=n,orange=o,white=w,yellow=y 
-**18. ring-number:** none=n,one=o,two=t 
-**19. ring-type:** cobwebby=c,evanescent=e,flaring=f,large=l, none=n,pendant=p,sheathing=s,zone=z 
-**20. spore-print-color:** black=k,brown=n,buff=b,chocolate=h,green=r, orange=o,purple=u,white=w,yellow=y 
-**21. population:** abundant=a,clustered=c,numerous=n, scattered=s,several=v,solitary=y 
-**22. habitat:** grasses=g,leaves=l,meadows=m,paths=p, urban=u,waste=w,woods=d
+**4. bruises?:** 
+* bruises
+* no 
+
+```{r}
+mushroom %>% 
+  group_by(bruises.) %>% 
+  summarise(count = n()) 
+```
+
+**5. odor:** 
+* almond
+* anise
+* creosote
+* fishy
+* foul
+* musty
+* none
+* pungent
+* spicy
+
+```{r}
+mushroom %>% 
+  group_by(odor) %>% 
+  summarise(count = n()) 
+```
+
+**6. gill-attachment:** 
+* attached
+* descending
+* free
+* notched
+
+```{r}
+mushroom %>% 
+  group_by(gill_attachment) %>% 
+  summarise(count = n()) 
+```
+
+**7. gill-spacing:** 
+* close
+* crowded
+* distant
+
+```{r}
+mushroom %>% 
+  group_by(gill_spacing) %>% 
+  summarise(count = n()) 
+```
+
+**8. gill-size:** 
+* broad
+* narrow
+
+```{r}
+mushroom %>% 
+  group_by(gill_size) %>% 
+  summarise(count = n()) 
+```
+
+**9. gill-color:** 
+* black
+* brown
+* buff
+* chocolate
+* gray
+* green
+* orange
+* pink
+* purple
+* red
+* white
+* yellow
+
+```{r}
+mushroom %>% 
+  group_by(gill_color) %>% 
+  summarise(count = n()) 
+```
+
+**10. stalk-shape:** 
+* enlarging
+* tapering
+
+```{r}
+mushroom %>% 
+  group_by(stalk_shape) %>% 
+  summarise(count = n()) 
+```
+
+**11. stalk-root:** 
+* bulbous
+* club
+* cup
+* equal
+* rhizomorphs
+* roote
+* missing
+
+```{r}
+mushroom %>% 
+  group_by(stalk_root) %>% 
+  summarise(count = n()) 
+```
+
+**12. stalk-surface-above-ring:** 
+* fibrous
+* scaly
+* silky
+* smooth
+
+```{r}
+mushroom %>% 
+  group_by(stalk_surface_above_ring) %>% 
+  summarise(count = n()) 
+```
+
+**13. stalk-surface-below-ring:** 
+* fibrous
+* scaly
+* silky
+* smooth
+
+```{r}
+mushroom %>% 
+  group_by(stalk_surface_below_ring) %>% 
+  summarise(count = n()) 
+```
+
+**14. stalk-color-above-ring:** 
+* brown
+* buff
+* cinnamon
+* gray
+* orange
+* pink
+* red
+* white
+* yellow
+
+```{r}
+mushroom %>% 
+  group_by(stalk_color_above_ring) %>% 
+  summarise(count = n()) 
+```
+
+**15. stalk-color-below-ring:** 
+* brown
+* buff
+* cinnamon
+* gray
+* orange
+* pink
+* red
+* white
+* yellow
+
+```{r}
+mushroom %>% 
+  group_by(stalk_color_below_ring) %>% 
+  summarise(count = n()) 
+```
+
+**16. veil-type:** 
+* partial
+* universal
+
+```{r}
+mushroom %>% 
+  group_by(veil_type) %>% 
+  summarise(count = n()) 
+```
+
+**17. veil-color:** 
+* brown
+* orange
+* white
+* yellow 
+
+```{r}
+mushroom %>% 
+  group_by(veil_color) %>% 
+  summarise(count = n()) 
+```
+
+**18. ring-number:** 
+* none
+* one
+* two
+
+```{r}
+mushroom %>% 
+  group_by(ring_number) %>% 
+  summarise(count = n()) 
+```
+
+**19. ring-type:** 
+* cobwebby
+* evanescent
+* flaring
+* large
+* none
+* pendant
+* sheathing
+* zone
+
+```{r}
+mushroom %>% 
+  group_by(ring_type) %>% 
+  summarise(count = n()) 
+```
+
+**20. spore-print-color:** 
+* black
+* brown
+* buff
+* chocolate
+* green=r, orange=o,purple=u,white=w,yellow=y 
+
+```{r}
+mushroom %>% 
+  group_by(spore_print_color) %>% 
+  summarise(count = n()) 
+```
+
+**21. population:** 
+* abundant
+* clustered
+* numerous
+* scattered
+* several
+* solitary
+
+```{r}
+mushroom %>% 
+  group_by(population) %>% 
+  summarise(count = n()) 
+```
+
+**22. habitat:** 
+* grasses
+* leaves
+* meadows
+* paths
+* urban
+* waste
+* woods
+
+```{r}
+mushroom %>% 
+  group_by(habitat) %>% 
+  summarise(count = n()) 
+```
+
 
 ```{r}
 glimpse(mushroom)
@@ -143,15 +378,14 @@ barplot(table(mushroom_prueba$class), main = 'Distribución de las clases en mus
 **1. Arbol de decision**
 
 ```{r}
-modelo_arbol <- rpart(class ~ ., data = mushroom_entrenamiento[,-which(colnames(mushroom_entrenamiento) == "cap_shape")], method =  'class')
-
+modelo_arbol <- rpart(class ~ ., data = mushroom_entrenamiento[,-which(colnames(mushroom_entrenamiento) == "veil_type")], method =  'class', control = rpart.control(cp=0))
 
 predicciones <- predict(modelo_arbol, newdata = mushroom_prueba, type = 'prob')
-head(predicciones)
+head(predicciones, 20)
 
 rpart.plot(modelo_arbol,
            shadow.col = "gray", 
-           main = "Clasificación de Hongos \n(Arbol de decisión)\n")
+           main = "Clasificacion de Hongos (Arbol de decision)")
 ```
 
 **2. Bosque Aleatorio**
@@ -159,10 +393,12 @@ rpart.plot(modelo_arbol,
 ```{r}
 modelo_bosque <- randomForest(class ~ cap_shape + cap_surface + cap_color + odor + gill_attachment + gill_spacing + gill_spacing + gill_size + gill_color + stalk_shape + stalk_shape + stalk_root + stalk_surface_above_ring, data = mushroom_entrenamiento)
 
-predicciones_bosque <- predict(modelo_bosque, newdata = mushroom_prueba, type = 'class')
-head(predicciones_bosque, 50)
+getTree(modelo_bosque, 1, labelVar=TRUE)
 ```
 
+**3. Regresion Logistica**
+
+Debido a que una de las condiciones para hacer regresion logistica es que las variables categoricas deben convertirse en variables dummy, y al tener 23 variables categoricas con multiples clases, no se va a aplicar regresion logistica al dataset.
 
 ### 6. Evaluación del modelo
 
@@ -180,12 +416,8 @@ especificidad_arbol <- data[2,2] / (data[1,2] + data[2,2])
 
 paste("* Exactitud Total del modelo Arbol de decision: ", exactitud_arbol)
 paste("* Sensibilidad del modelo Arbol de decision: ", sensibilidad_arbol)
-paste("* Precisión del modelo Arbol de decision: ", precision_arbol)
+paste("* Precision del modelo Arbol de decision: ", precision_arbol)
 paste("* Especificidad del modelo Arbol de decision: ", especificidad_arbol)
-```
-
-```{r}
-data
 ```
 
 
@@ -208,8 +440,17 @@ predicciones_bosque <- predict(modelo_bosque, newdata = mushroom_prueba, type = 
 head(predicciones_bosque, 50)
 ```
 
+```{r}
+getTree(modelo_bosque, 1, labelVar=TRUE)
+```
+
 
 ### 7. Desarolle al menos 3 conclusiones sobre las clasificaciones de los modelos
 
+1. Para el modelo del arbol de decision, en general, los resultados son poco concluyentes, ya que podemos observar que el modelo esta siendo sobreajustado (overfitting), tenemos clasificaciones del 100% para hongos venenosos y en los hongos comestibles podemos ver clasificaciones mas altas al 99%, de estas clasificaciones observamos que solo 18 hongos fueron clasificados como comestibles, pero en realidad son venenosos.
+Debido al problema de overfitting que tenemos con el modelo, tampoco se puede calcular la sensibilidad y la precision del modelo, ya que obtenemos `NaN` debido a una division por `0` que se realiza.
+
+
+3. Para el modelo de regresion logistica, se concluye que si bien es cierto que nos pedian aplicar los tres modelos vistos en clase, no todos los sets de datos aplican para cada modelo. En este caso crear más de 50 variables dummy solo para aplicar regresión logistica no era viable. Esto lo confirmé con Frans durante la clase 06.
 
 
