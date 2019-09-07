@@ -10,61 +10,176 @@ knitr::opts_chunk$set(echo = TRUE)
 # Tarea 6.
 # Metodos supervisados 2
 
-Librerias
+# Estudiante
+* Merian Herrera Fuentes
+* meryann68@gmail.com
+* 207180364
+
 ```{r}
 library(caTools)
+library(dplyr)
 library(rpart)
-#..........Librerias de los modelos
+library(rpart.plot)
+library(ROCR)
 ```
 
-1. Desarolle el An?lisis del Problema
-```{r}
-# Construya el análisis del problema
+# 1. Analisis del Problema
+ 
+ Los datos se obtienen mediante el  parte oficial de transito que realiza la Direccion General de Policia de Transito al presentarse un accidente, los cuales ingresan a la base de datos de dos formas (hand held y papel). Debido a que parte de la labor principal de la Institucion es salvar vidas, y por los recursos limitados que existen, se trabaja solo con accidentes con heridos y/o fallecidos; y no se trabaja con accidentes que presentan solo datos materiales. Ademas, posteriormente inicia el proceso de limpieza, correccion de inconsistencias, validacion de algunas variables,  georeferenciacion de los accidentes, entre otros. <br><br>
 
+Accidente con victima se refiere cuando en el accidente de transito al menos uno de los participantes resulto: herido leve, grave o fallecido. <br><br>
 
-# Los datos se obtienen mediante el  parte oficial de tr?nsito que realiza la Direcci?n General de Polic?a de Tr?nsito al presentarse un accidente, los cuales ingresan a la base de datos de dos formas (hand held y papel). Debido a que parte de la labor principal de la Instituci?n es salvar vidas, y por los recursos limitados que existen, se trabaja solo con accidentes con heridos y/o fallecidos; y no se trabaja con accidentes que presentan solo da?os materiales. Adem?s, posteriormente inicia el proceso de limpieza, correcci?n de inconsistencias, validaci?n de algunas variables,  georeferenciaci?n de los accidentes, entre otros.
+Para mas informacion revisar la metodologia del documento Memoria estadistica de accidentes de transito con victimas.Periodo 2012-2014. <br><br>
 
-
-#Accidente con v?ctima se refiere cuando en el accidente de tr?nsito al menos uno de los participantes resulto: herido leve, grave o fallecido.
-
-#Para m?s informaci?n revisar la metodolog?a del documento Memoria estad?stica de accidentes de tr?nsito con v?ctimas.Periodo 2012-2014.
-
-```
 Fuente del dataset:
 http://datosabiertos.csv.go.cr/dashboards/19683/accidentes/
 
-1. Cargue el archivo nombre.csv en una variable
+# 2. Cargue el archivo nombre.csv en una variable
 
+```{r}
+datos_headers = c("id", "rol", "tipo_de_lesion", "edad", "edad_quinquenal", "sexo", "anno", "mes", "dia", "provincia", "canton", "distrito", "dia_1", "mes_1", "edad_quinquenal_1")
+
+datos <- read.csv("datos-transito.csv", encoding = "UTF-8", col.names=datos_headers)
+datos <- datos[c(-1, -4, -13,-14, -15)]
+
+datos$asistencia_medica <-  with(datos, ifelse(datos$tipo_de_lesion %in% c("Herido leve", "Herido grave", "Muerte"), "si", "no"))
+
+head(datos, 80000)
+```
+
+# 3. Desarolle el Entendimiento de los Datos
+
+#### Valores nulos
+
+```{r}
+sapply(datos, function(x) {sum(is.na(x))})
+```
+
+#### Variables
+
+- **Rol: ** Este es el role de la persona que participo en el accidente. Variable categorica, posibles valores:
+
+```{r}
+datos %>% 
+  group_by(rol) %>% 
+  summarise(count = n()) 
+```
+
+- **Tipo de lesion: ** Tipo de lesion sufrida por la persona que ha tenido el accidente. Variable categorica, posibles valores:
+
+```{r}
+datos %>% 
+  group_by(tipo_de_lesion) %>% 
+  summarise(count = n()) 
+```
+
+- **Edad Quinquenal: **
+
+```{r}
+datos %>% 
+  group_by(edad_quinquenal) %>% 
+  summarise(count = n()) 
+```
+
+- **Sexo: ** Sexo de la victima del accidente. Variable categorica, posibles valores:
+
+```{r}
+datos %>% 
+  group_by(sexo) %>% 
+  summarise(count = n()) 
+```
+
+- **Anno: ** Anno en el que sucedio en el accidente. Variable numerica, posibles valores:
+
+```{r}
+datos %>% 
+  group_by(anno) %>% 
+  summarise(count = n()) 
+```
+
+- **Mes: ** Mes en el que sucedio el accidente. Variable categorica, posibles valores:
+
+```{r}
+datos %>% 
+  group_by(mes) %>% 
+  summarise(count = n()) 
+```
+
+- **Dia: ** Dia de la semana en que sucedio el accidente.Variable categorica, posibles valores:
+
+```{r}
+datos %>% 
+  group_by(dia) %>% 
+  summarise(count = n()) 
+```
+
+- **Provincia: ** Provincia en la que sucedio el accidente. Variable categorica, posibles valores:
+
+```{r}
+datos %>% 
+  group_by(provincia) %>% 
+  summarise(count = n()) 
+```
+
+- **Canton: ** Canton donde sucedio el accidente.Variable categorica, posibles valores:
+
+```{r}
+datos %>% 
+  group_by(canton) %>% 
+  summarise(count = n()) 
+```
+
+- **Distrito: ** Distrito donde sucedio el accidente. Variable categorica, posibles valores:
+
+```{r}
+datos %>% 
+  group_by(distrito) %>% 
+  summarise(count = n())
+```
+
+# 4. Utilizando barplot cree un grafico de los atributos del dataset, observe las correlaciones entre atributos
+
+```{r}
+provincia_sexo  <- datos %>% 
+  group_by(provincia, sexo) %>% 
+  summarise(count = n()) 
+
+ggplot(data = provincia_sexo, aes(x = provincia, y = count, fill = sexo)) +
+  geom_bar(stat = "identity")
+```
+
+```{r}
+datos_provincia  <- datos %>% 
+  group_by(provincia) %>% 
+  summarise(count = n()) 
+
+ggplot(data = datos_provincia, aes(x = provincia, y = count)) +
+  geom_bar(stat = "identity")
+```
+
+```{r}
+datos_mes  <- datos %>% 
+  group_by(mes) %>% 
+  summarise(count = n()) 
+
+ggplot(data = datos_mes, aes(x = mes, y = count)) +
+  geom_bar(stat = "identity")
+
+```
+
+# 5. Realice al menos 5 modelos de los observados en clase
 ```{r}
 # Escriba su c?digo aqui
 ```
 
-2. Desarolle el Entendimiento de los Datos
-
-```{r}
-# Escriba su c?digo aqui
-```
-
-3. Utilizando barplot cree un gr?fico de los atributos del dataset, observe las correlaciones entre atributos
-
-```{r}
-# Escriba su c?digo aqui
-```
-
-
-4. Realice al menos 5 modelos de los observados en clase
-```{r}
-# Escriba su c?digo aqui
-```
-
-5. Evaluaci?n de los modelos
+# 6. Evaluaci?n de los modelos
 ```{r}
 # Escriba su c?digo aqui
 
 ```
 
 
-6. Desarolle al menos 5 conclusiones sobre las clasificaciones de los modelos
+# 7. Desarolle al menos 5 conclusiones sobre las clasificaciones de los modelos
 
 
 
