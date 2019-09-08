@@ -15,12 +15,21 @@ knitr::opts_chunk$set(echo = TRUE)
 * meryann68@gmail.com
 * 207180364
 
-```{r}
+```{r warning=FALSE, echo=FALSE}
+library(caret)
 library(caTools)
+library(class)
+library(corrplot)
 library(dplyr)
+library(e1071)
+library(ggplot2)
+library(lattice)
+library(neuralnet)
+library(randomForest)
+library(readr)
+library(ROCR)
 library(rpart)
 library(rpart.plot)
-library(ROCR)
 ```
 
 # 1. Analisis del Problema
@@ -39,13 +48,23 @@ http://datosabiertos.csv.go.cr/dashboards/19683/accidentes/
 ```{r}
 datos_headers = c("id", "rol", "tipo_de_lesion", "edad", "edad_quinquenal", "sexo", "anno", "mes", "dia", "provincia", "canton", "distrito", "dia_1", "mes_1", "edad_quinquenal_1")
 
-datos <- read.csv("datos-transito.csv", encoding = "UTF-8", col.names=datos_headers)
-datos <- datos[c(-1, -4, -13,-14, -15)]
-
-datos$asistencia_medica <-  with(datos, ifelse(datos$tipo_de_lesion %in% c("Herido leve", "Herido grave", "Muerte"), "si", "no"))
+datos <- read.csv("datos-transito.csv", 
+                  encoding = "UTF-8", 
+                  col.names = datos_headers)
 
 head(datos, 80000)
 ```
+
+
+```{r}
+datos$asistencia_medica <-  as.factor(with(datos, ifelse(datos$tipo_de_lesion %in% c("Herido leve", "Herido grave", "Muerte"), "si", "no")))
+
+drops <- c("id", "tipo_de_lesion", "edad", "dia_1", "mes_1", "edad_quinquenal_1")
+datos <- datos[ , !(names(datos) %in% drops)]
+
+head(datos)
+```
+
 
 # 3. Desarolle el Entendimiento de los Datos
 
@@ -69,7 +88,7 @@ datos %>%
 
 ```{r}
 datos %>% 
-  group_by(tipo_de_lesion) %>% 
+  group_by(asistencia_medica) %>% 
   summarise(count = n()) 
 ```
 
@@ -137,6 +156,10 @@ datos %>%
   summarise(count = n())
 ```
 
+```{r}
+glimpse(datos)
+```
+
 # 4. Utilizando barplot cree un grafico de los atributos del dataset, observe las correlaciones entre atributos
 
 ```{r}
@@ -150,33 +173,175 @@ ggplot(data = provincia_sexo, aes(x = provincia, y = count, fill = sexo)) +
 
 ```{r}
 datos_provincia  <- datos %>% 
-  group_by(provincia) %>% 
+  group_by(rol, asistencia_medica) %>% 
   summarise(count = n()) 
 
-ggplot(data = datos_provincia, aes(x = provincia, y = count)) +
+ggplot(data = datos_provincia, aes(x = rol, y = count, fill = asistencia_medica)) +
   geom_bar(stat = "identity")
 ```
 
 ```{r}
 datos_mes  <- datos %>% 
-  group_by(mes) %>% 
+  group_by(mes, asistencia_medica) %>% 
   summarise(count = n()) 
 
-ggplot(data = datos_mes, aes(x = mes, y = count)) +
+ggplot(data = datos_mes, aes(x = mes, y = count, fill = asistencia_medica)) +
   geom_bar(stat = "identity")
 
 ```
 
 # 5. Realice al menos 5 modelos de los observados en clase
+
+#### Dividir los datos
+
 ```{r}
-# Escriba su c?digo aqui
+set.seed(12)
+split_data <- sample.split(datos$asistencia_medica, SplitRatio = 0.7)
+
+datos_entrenamiento <- datos[split_data,]
+datos_prueba <- datos[!split_data,]
 ```
 
-# 6. Evaluaci?n de los modelos
 ```{r}
-# Escriba su c?digo aqui
+barplot(table(datos_entrenamiento$asistencia_medica), main = 'Distribución de las clases en los Datos de Entrenamiento', ylab = 'Observaciones', xlab = 'Clase')
+
+barplot(table(datos_prueba$asistencia_medica), main = 'Distribución de las clases en los Datos de Prueba', ylab = 'Observaciones', xlab = 'Clase')
+```
+
+
+#### KNN
+
+La funcion **knn()** funciona solo con variables numericas, al tener un dataset de practicamente solo variables categoricas, no podemos correr este modelo con el dataset asignado.
+
+#### SVN
+
+```{r}
+modelo_svn <- svm(asistencia_medica ~ sexo + rol + provincia, 
+                  data = datos_entrenamiento, 
+                  kernel = 'linear',
+                  cross = 2, 
+                  scale = FALSE)
+summary(modelo_svn)
+```
+
+#### Red Neuronal
+
+```{r}
+matriz_dummies <- model.matrix( 
+   ~sexo + rol + provincia + asistencia_medica,
+   datos_entrenamiento
+)
+
+modelo_red_neuronal <- neuralnet(asistencia_medicasi ~ sexoHombre + sexoHombre + rolConductor + rolMotociclista ,
+                                 data = matriz_dummies,
+                                 hidden = 4,
+                                 rep = 1,
+                                 linear.output = T)
+
+plot(modelo_red_neuronal, rep = "best")
+```
+
+
+#### Arbol de Decision
+
+```{r}
+modelo_arbol <- rpart(asistencia_medica ~ sexo + rol + provincia, 
+                      data = datos_entrenamiento, 
+                      method =  'class', 
+                      control = rpart.control(cp = 0))
+
+rpart.plot(modelo_arbol,
+           shadow.col = "gray", 
+           main = "Clasificacion de accidentes. Necesita o no asistencia medica")
+```
+
+#### Regresion Logistica
+
+```{r}
+modelo_regresion_logistica <- glm(asistencia_medica ~ sexo + rol + provincia,
+                                   data = datos_entrenamiento,
+                                   family = binomial)
+
+summary(modelo_regresion_logistica)
+```
+
+#### Bosques Aleatorios
+
+```{r}
+modelo_bosque_aleatorio <- randomForest(asistencia_medica ~ sexo + rol + provincia, 
+                                        data = datos_entrenamiento)
+
+modelo_bosque_aleatorio
+```
+
+
+# 6. Evaluacion de los modelos
+
+
+#### SVN
+
+```{r}
 
 ```
+
+#### Red Neuronal
+
+```{r}
+
+```
+
+#### Arbol de Decision
+
+```{r}
+predicciones_arbol <- predict(modelo_arbol, 
+                              newdata = datos_prueba, 
+                              type = 'class')
+
+# Comparar la etiqueta verdadera contra la etiqueta predicha.
+comparacion_arbol <- table(predicciones_arbol, datos_prueba$asistencia_medica)
+print(comparacion_arbol)
+
+verdaderos_positivos_arbol <- comparacion_arbol[2,2]
+verdaderos_negativos_arbol <- comparacion_arbol[1,1]
+falsos_positivos_arbol <- comparacion_arbol[1,2]
+falsos_negativos_arbol <- comparacion_arbol[2,1]
+
+# VP+VN / Total
+exactitud_arbol <- (verdaderos_positivos_arbol + verdaderos_negativos_arbol) / sum(comparacion_arbol)
+
+# VP / total positivos
+sensibilidad_arbol <- verdaderos_positivos_arbol / (verdaderos_positivos_arbol + falsos_negativos_arbol)
+
+# VP / Total clasificados positivos
+precision_arbol <- verdaderos_positivos_arbol / (verdaderos_positivos_arbol + falsos_positivos_arbol )
+
+# VN/ Total Negativos
+especificidad_arbol <- verdaderos_negativos_arbol / (verdaderos_negativos_arbol + falsos_positivos_arbol)
+
+paste("* Exactitud Total del modelo Arbol de decision: ", round(exactitud_arbol * 100, digits = 0), "%")
+paste("* Sensibilidad del modelo Arbol de decision: ", round(sensibilidad_arbol * 100, digits = 0), "%")
+paste("* Precision del modelo Arbol de decision: ", round(precision_arbol * 100, digits = 0), "%")
+paste("* Especificidad del modelo Arbol de decision: ", round(especificidad_arbol * 100, digits = 0), "%")
+```
+
+#### Regresion Logistica
+
+```{r}
+
+```
+
+#### Bosques Aleatorios
+
+```{r}
+
+predicciones_bosque_aleatorio <- predict(modelo_bosque_aleatorio, 
+                                         newdata = datos_prueba, 
+                                         type = 'class')
+head(predicciones_bosque_aleatorio, 20)
+
+```
+
+
 
 
 # 7. Desarolle al menos 5 conclusiones sobre las clasificaciones de los modelos

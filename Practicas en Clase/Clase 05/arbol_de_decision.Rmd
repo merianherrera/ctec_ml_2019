@@ -225,6 +225,7 @@ print((data[1,1] + data[2,2]) / sum(data) )
 ```
 
 \begin{equation}\text{Sensibilidad}=\frac{VP}{\text{Total Positivos}}\end{equation}
+
 - *Sensibilidad* (procentaje de positivos verdaderos - de las observaciones que realmente son benignas, ¿cuántas clasificó apropiadamente el modelo?) = 93.42% (de las 137 observaciones que son benignos, 128 fueron correctamente identificadas).
 
 ```{r}

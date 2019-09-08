@@ -148,6 +148,7 @@ m <- model.matrix(
   data = crx.entrenamiento 
 )
 
+
 crx.fit <- neuralnet(V16yes ~ V1b+V2 ,data = m,hidden =4,rep=1,linear.output=T)
 ```
 
