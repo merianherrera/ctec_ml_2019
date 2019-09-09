@@ -51,7 +51,12 @@ datos <- data.frame(Seatbelts)
 #datos <- datos[, c(1:8)]
 
 #La estructura del conjunto de datos:
-str(datos)
+head(datos, 100)
+```
+
+
+
+```{r}
 
 #Dividir el conjunto de datos en uno de entrenamiento y otro de pruebas:
 set.seed(5768)
