@@ -1,0 +1,558 @@
+---
+title: "Clase 7"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Tarea 7.
+# Validacion
+
+# Estudiante
+* Merian Herrera Fuentes
+* meryann68@gmail.com
+* 207180364
+
+```{r warning=FALSE, echo=FALSE}
+library(caret)
+library(caTools)
+library(class)
+library(corrplot)
+library(dplyr)
+library(e1071)
+library(ggplot2)
+library(lattice)
+library(neuralnet)
+library(randomForest)
+library(readr)
+library(ROCR)
+library(rpart)
+library(rpart.plot)
+```
+
+# 1. Analisis del Problema
+ 
+ Los datos se obtienen mediante el  parte oficial de transito que realiza la Direccion General de Policia de Transito al presentarse un accidente, los cuales ingresan a la base de datos de dos formas (hand held y papel). Debido a que parte de la labor principal de la Institucion es salvar vidas, y por los recursos limitados que existen, se trabaja solo con accidentes con heridos y/o fallecidos; y no se trabaja con accidentes que presentan solo datos materiales. Ademas, posteriormente inicia el proceso de limpieza, correccion de inconsistencias, validacion de algunas variables,  georeferenciacion de los accidentes, entre otros. <br><br>
+
+Accidente con victima se refiere cuando en el accidente de transito al menos uno de los participantes resulto: herido leve, grave o fallecido. <br><br>
+
+Para mas informacion revisar la metodologia del documento Memoria estadistica de accidentes de transito con victimas.Periodo 2012-2014. <br><br>
+
+Fuente del dataset:
+http://datosabiertos.csv.go.cr/dashboards/19683/accidentes/
+
+# 2. Cargue el archivo nombre.csv en una variable
+
+```{r}
+datos_headers = c("id", "rol", "tipo_de_lesion", "edad", "edad_quinquenal", "sexo", "anno", "mes", "dia", "provincia", "canton", "distrito", "dia_1", "mes_1", "edad_quinquenal_1")
+
+datos <- read.csv("datos-transito.csv", 
+                  encoding = "UTF-8", 
+                  col.names = datos_headers)
+
+head(datos, 80000)
+```
+
+
+```{r}
+datos$asistencia_medica <-  as.factor(with(datos, ifelse(datos$tipo_de_lesion %in% c("Herido leve", "Herido grave", "Muerte"), "si", "no")))
+
+drops <- c("id", "tipo_de_lesion", "edad", "dia_1", "mes_1", "edad_quinquenal_1")
+datos <- datos[ , !(names(datos) %in% drops)]
+
+head(datos)
+```
+
+
+# 3. Desarolle el Entendimiento de los Datos
+
+#### Valores nulos
+
+```{r}
+sapply(datos, function(x) {sum(is.na(x))})
+```
+
+#### Variables
+
+- **Rol: ** Este es el role de la persona que participo en el accidente. Variable categorica, posibles valores:
+
+```{r}
+datos %>% 
+  group_by(rol) %>% 
+  summarise(count = n()) 
+```
+
+- **Tipo de lesion: ** Tipo de lesion sufrida por la persona que ha tenido el accidente. Variable categorica, posibles valores:
+
+```{r}
+datos %>% 
+  group_by(asistencia_medica) %>% 
+  summarise(count = n()) 
+```
+
+- **Edad Quinquenal: **
+
+```{r}
+datos %>% 
+  group_by(edad_quinquenal) %>% 
+  summarise(count = n()) 
+```
+
+- **Sexo: ** Sexo de la victima del accidente. Variable categorica, posibles valores:
+
+```{r}
+datos %>% 
+  group_by(sexo) %>% 
+  summarise(count = n()) 
+```
+
+- **Anno: ** Anno en el que sucedio en el accidente. Variable numerica, posibles valores:
+
+```{r}
+datos %>% 
+  group_by(anno) %>% 
+  summarise(count = n()) 
+```
+
+- **Mes: ** Mes en el que sucedio el accidente. Variable categorica, posibles valores:
+
+```{r}
+datos %>% 
+  group_by(mes) %>% 
+  summarise(count = n()) 
+```
+
+- **Dia: ** Dia de la semana en que sucedio el accidente.Variable categorica, posibles valores:
+
+```{r}
+datos %>% 
+  group_by(dia) %>% 
+  summarise(count = n()) 
+```
+
+- **Provincia: ** Provincia en la que sucedio el accidente. Variable categorica, posibles valores:
+
+```{r}
+datos %>% 
+  group_by(provincia) %>% 
+  summarise(count = n()) 
+```
+
+- **Canton: ** Canton donde sucedio el accidente.Variable categorica, posibles valores:
+
+```{r}
+datos %>% 
+  group_by(canton) %>% 
+  summarise(count = n()) 
+```
+
+- **Distrito: ** Distrito donde sucedio el accidente. Variable categorica, posibles valores:
+
+```{r}
+datos %>% 
+  group_by(distrito) %>% 
+  summarise(count = n())
+```
+
+```{r}
+glimpse(datos)
+```
+
+# 4. Utilizando barplot cree un grafico de los atributos del dataset, observe las correlaciones entre atributos
+
+```{r}
+provincia_sexo  <- datos %>% 
+  group_by(provincia, sexo) %>% 
+  summarise(count = n()) 
+
+ggplot(data = provincia_sexo, aes(x = provincia, y = count, fill = sexo)) +
+  geom_bar(stat = "identity")
+```
+
+```{r}
+datos_provincia  <- datos %>% 
+  group_by(rol, asistencia_medica) %>% 
+  summarise(count = n()) 
+
+ggplot(data = datos_provincia, aes(x = rol, y = count, fill = asistencia_medica)) +
+  geom_bar(stat = "identity")
+```
+
+```{r}
+datos_mes  <- datos %>% 
+  group_by(mes, asistencia_medica) %>% 
+  summarise(count = n()) 
+
+ggplot(data = datos_mes, aes(x = mes, y = count, fill = asistencia_medica)) +
+  geom_bar(stat = "identity")
+
+```
+
+# 5. Realice al menos 5 modelos de los observados en clase
+
+#### Dividir los datos
+
+```{r}
+set.seed(12)
+split_data <- sample.split(datos$asistencia_medica, SplitRatio = 0.7)
+
+datos_entrenamiento <- datos[split_data,]
+datos_prueba <- datos[!split_data,]
+```
+
+```{r}
+barplot(table(datos_entrenamiento$asistencia_medica), main = 'Distribución de las clases en los Datos de Entrenamiento', ylab = 'Observaciones', xlab = 'Clase')
+
+barplot(table(datos_prueba$asistencia_medica), main = 'Distribución de las clases en los Datos de Prueba', ylab = 'Observaciones', xlab = 'Clase')
+```
+
+
+#### KNN
+
+La funcion **knn()** funciona solo con variables numericas, al tener un dataset de practicamente solo variables categoricas, no podemos correr este modelo con el dataset asignado.
+
+#### SVN
+
+```{r}
+modelo_svn <- svm(asistencia_medica ~ sexo + rol + provincia, 
+                  data = datos_entrenamiento, 
+                  kernel = 'linear',
+                  cross = 2, 
+                  scale = FALSE)
+# summary(modelo_svn)
+```
+
+#### Red Neuronal
+
+```{r}
+matriz_dummies <- model.matrix( 
+   ~sexo + rol + provincia + asistencia_medica,
+   datos_entrenamiento
+)
+
+modelo_red_neuronal <- neuralnet(asistencia_medicasi ~ sexoHombre + sexoMujer + rolConductor + rolMotociclista ,
+                                 data = matriz_dummies,
+                                 hidden = 4,
+                                 rep = 1,
+                                 linear.output = T)
+
+plot(modelo_red_neuronal, rep = "best")
+```
+
+
+#### Arbol de Decision
+
+```{r}
+modelo_arbol <- rpart(asistencia_medica ~ sexo + rol + provincia, 
+                      data = datos_entrenamiento, 
+                      method =  'class', 
+                      control = rpart.control(cp = 0))
+
+rpart.plot(modelo_arbol,
+           shadow.col = "gray", 
+           main = "Clasificacion de accidentes. Necesita o no asistencia medica")
+```
+
+#### Regresion Logistica
+
+```{r}
+modelo_regresion_logistica <- glm(asistencia_medica ~ sexo + rol + provincia,
+                                   data = datos_entrenamiento,
+                                   family = binomial)
+
+summary(modelo_regresion_logistica)
+```
+
+#### Bosques Aleatorios
+
+```{r}
+modelo_bosque_aleatorio <- randomForest(asistencia_medica ~ sexo + rol + provincia, 
+                                        data = datos_entrenamiento)
+
+# modelo_bosque_aleatorio
+```
+
+
+# 6. Tunning de modelos
+
+#### SVM
+
+```{r}
+svm_tunned <- tune(method = svm, 
+                asistencia_medica ~ sexo + rol + provincia, 
+                data = datos_entrenamiento,
+                kernel = "radial",
+                ranges = list(cost = c(0.1, 1), 
+                              gamma = c(0.5, 1)))
+
+svm_matriz_tunning <- table(true = datos_entrenamiento, 
+                            pred = predict(svm_tunned$best.model,
+                                           newx = datos_entrenamiento))
+
+exactitud_svm_tunned <- (svm_matriz_tunning[1] + svm_matriz_tunning[4])/(sum(svm_matriz_tunning))
+
+tasa_error_svm_tunned <- (svm_matriz_tunning[2] + svm_matriz_tunning[3])/(sum(svm_matriz_tunning))
+
+sensibilidad_svm_tunned = (svm_matriz_tunning[1]) / (svm_matriz_tunning[1] + svm_matriz_tunning[3])
+
+vpn_svm_tunned = (svm_matriz_tunning[4]) / (svm_matriz_tunning[2] + svm_matriz_tunning[4])
+
+paste("Exactitud del modelo SVM con tunning:", exactitud_svm_tunned*100, "%")
+paste("Tasa error del modelo SVM con tunning:", tasa_error_svm_tunned*100, "%")
+paste("Sensibilidad del modelo SVM con tunning:", sensibilidad_svm_tunned)
+paste("VPN del modelo SVM con tunning:", vpn_svm_tunned)
+```
+
+
+#### Regresion Logistica
+
+```{r}
+regresion_logistica_tunned <- tune(method = glm, 
+                asistencia_medica ~ sexo + rol + provincia, 
+                data = datos_entrenamiento,
+                kernel = "radial",
+                ranges = list(cost = c(0.1, 1), 
+                              gamma = c(0.5, 1)))
+
+regresion_logistica_matriz_tunning <- table(true = datos_entrenamiento, 
+                            pred = predict(svm_tunned$best.model,
+                                           newx = datos_entrenamiento))
+
+exactitud_regresion_logistica_tunned <- (regresion_logistica_matriz_tunning[1] + regresion_logistica_matriz_tunning[4])/(sum(regresion_logistica_matriz_tunning))
+
+tasa_error_regresion_logistica_tunned <- (regresion_logistica_matriz_tunning[2] + regresion_logistica_matriz_tunning[3])/(sum(regresion_logistica_matriz_tunning))
+
+sensibilidad_regresion_logistica_tunned = (regresion_logistica_matriz_tunning[1]) / (regresion_logistica_matriz_tunning[1] + regresion_logistica_matriz_tunning[3])
+
+vpn_svm_tunned = (regresion_logistica_matriz_tunning[4]) / (regresion_logistica_matriz_tunning[2] + regresion_logistica_matriz_tunning[4])
+
+paste("Exactitud del modelo Regresion Logistica con tunning:", exactitud_regresion_logistica_tunned*100, "%")
+paste("Tasa error del modelo Regresion Logistica con tunning:", tasa_error_regresion_logistica_tunned*100, "%")
+paste("Sensibilidad del modelo Regresion Logistica con tunning:", sensibilidad_regresion_logistica_tunned)
+paste("VPN del modelo Regresion Logistica con tunning:", vpn_regresion_logistica_tunned)
+```
+
+#### Arbol de decision
+
+```{r}
+arbol_tunned <- tune(method = rpart, 
+                asistencia_medica ~ sexo + rol + provincia, 
+                data = datos_entrenamiento,
+                kernel = "radial",
+                ranges = list(cost = c(0.1, 1), 
+                              gamma = c(0.5, 1)))
+
+arbol_matriz_tunning <- table(true = datos_entrenamiento, 
+                            pred = predict(arbol_tunned$best.model,
+                                           newx = datos_entrenamiento))
+
+exactitud_arbol_tunned <- (arbol_matriz_tunning[1] + arbol_matriz_tunning[4])/(sum(arbol_matriz_tunning))
+
+tasa_error_arbol_tunned <- (arbol_matriz_tunning[2] + arbol_matriz_tunning[3])/(sum(arbol_matriz_tunning))
+
+sensibilidad_arbol_tunned = (arbol_matriz_tunning[1]) / (arbol_matriz_tunning[1] + arbol_matriz_tunning[3])
+
+vpn_arbol_tunned = (arbol_matriz_tunning[4]) / (arbol_matriz_tunning[2] + arbol_matriz_tunning[4])
+
+paste("Exactitud del modelo Arbol de Decision con tunning:", exactitud_arbol_tunned*100, "%")
+paste("Tasa error del modelo Arbol de Decision con tunning:", tasa_error_arbol_tunned*100, "%")
+paste("Sensibilidad del modelo Arbol de Decision con tunning:", sensibilidad_arbol_tunned)
+paste("VPN del modelo Arbol de Decision con tunning:", vpn_arbol_tunned)
+```
+
+#### Bosque aleatorio
+
+```{r}
+bosque_tunned <- tune(method = randomForest, 
+                asistencia_medica ~ sexo + rol + provincia, 
+                data = datos_entrenamiento,
+                kernel = "radial",
+                ranges = list(cost = c(0.1, 1), 
+                              gamma = c(0.5, 1)))
+
+bosque_matriz_tunning <- table(true = datos_entrenamiento, 
+                            pred = predict(bosque_tunned$best.model,
+                                           newx = datos_entrenamiento))
+
+exactitud_bosque_tunned <- (bosque_matriz_tunning[1] + bosque_matriz_tunning[4])/(sum(bosque_matriz_tunning))
+
+tasa_error_bosque_tunned <- (bosque_matriz_tunning[2] + bosque_matriz_tunning[3])/(sum(bosque_matriz_tunning))
+
+sensibilidad_bosque_tunned = (bosque_matriz_tunning[1]) / (bosque_matriz_tunning[1] + bosque_matriz_tunning[3])
+
+vpn_bosque_tunned = (bosque_matriz_tunning[4]) / (bosque_matriz_tunning[2] + bosque_matriz_tunning[4])
+
+paste("Exactitud del modelo Bosque Aleatorio con tunning:", exactitud_bosque_tunned*100, "%")
+paste("Tasa error del modelo Bosque Aleatorio con tunning:", tasa_error_bosque_tunned*100, "%")
+paste("Sensibilidad del modelo Bosque Aleatorio con tunning:", sensibilidad_bosque_tunned)
+paste("VPN del modelo Bosque Aleatorio con tunning:", vpn_bosque_tunned)
+```
+
+# 7. Evaluacion de los modelos
+
+
+#### SVN
+
+```{r}
+predicciones_svn <- predict(modelo_svn, 
+                                   newdata = datos_prueba)
+
+comparacion_svn <- table(predicciones_svn, datos_prueba$asistencia_medica)
+print(comparacion_svn)
+
+verdaderos_positivos_svn <- comparacion_svn[2,2]
+verdaderos_negativos_svn <- comparacion_svn[1,1]
+falsos_positivos_svn <- comparacion_svn[1,2]
+falsos_negativos_svn <- comparacion_svn[2,1]
+
+# VP+VN / Total
+exactitud_svn <- (verdaderos_positivos_svn + verdaderos_negativos_svn) / sum(comparacion_svn)
+
+# VP / total positivos
+sensibilidad_svn <- verdaderos_positivos_svn / (verdaderos_positivos_svn + falsos_negativos_svn)
+
+# VP / Total clasificados positivos
+precision_svn <- verdaderos_positivos_svn / (verdaderos_positivos_svn + falsos_positivos_svn )
+
+# VN/ Total Negativos
+especificidad_svn <- verdaderos_negativos_svn / (verdaderos_negativos_svn + falsos_positivos_svn)
+
+paste("* Exactitud Total del modelo SVN: ", round(exactitud_svn * 100, digits = 0), "%")
+paste("* Sensibilidad del modelo SVN: ", round(sensibilidad_svn * 100, digits = 0), "%")
+paste("* Precision del modelo SVN: ", round(precision_svn * 100, digits = 0), "%")
+paste("* Especificidad del modelo SVN: ", round(especificidad_svn * 100, digits = 0), "%")
+```
+
+#### Red Neuronal
+
+```{r}
+predicciones_red <- neuralnet::compute(modelo_red_neuronal,
+                                       mp[,c("V1b","V2")])
+
+results <- data.frame(actual = mp, prediction = predicciones.red$net.result)
+results
+
+predicciones.redClass=ifelse(predicciones.red$net.result>=0.5,1,0)
+predicciones.redClass
+```
+
+#### Arbol de Decision
+
+```{r}
+predicciones_arbol <- predict(modelo_arbol, 
+                              newdata = datos_prueba, 
+                              type = 'class')
+
+# Comparar la etiqueta verdadera contra la etiqueta predicha.
+comparacion_arbol <- table(predicciones_arbol, datos_prueba$asistencia_medica)
+print(comparacion_arbol)
+
+verdaderos_positivos_arbol <- comparacion_arbol[2,2]
+verdaderos_negativos_arbol <- comparacion_arbol[1,1]
+falsos_positivos_arbol <- comparacion_arbol[1,2]
+falsos_negativos_arbol <- comparacion_arbol[2,1]
+
+# VP+VN / Total
+exactitud_arbol <- (verdaderos_positivos_arbol + verdaderos_negativos_arbol) / sum(comparacion_arbol)
+
+# VP / total positivos
+sensibilidad_arbol <- verdaderos_positivos_arbol / (verdaderos_positivos_arbol + falsos_negativos_arbol)
+
+# VP / Total clasificados positivos
+precision_arbol <- verdaderos_positivos_arbol / (verdaderos_positivos_arbol + falsos_positivos_arbol )
+
+# VN/ Total Negativos
+especificidad_arbol <- verdaderos_negativos_arbol / (verdaderos_negativos_arbol + falsos_positivos_arbol)
+
+paste("* Exactitud Total del modelo Arbol de decision: ", round(exactitud_arbol * 100, digits = 0), "%")
+paste("* Sensibilidad del modelo Arbol de decision: ", round(sensibilidad_arbol * 100, digits = 0), "%")
+paste("* Precision del modelo Arbol de decision: ", round(precision_arbol * 100, digits = 0), "%")
+paste("* Especificidad del modelo Arbol de decision: ", round(especificidad_arbol * 100, digits = 0), "%")
+```
+
+#### Regresion Logistica
+
+```{r}
+predicciones_regresion_logistica <- predict(modelo_regresion_logistica, 
+                                            newdata = datos_prueba, 
+                                            type = 'response')
+
+comparacion_regresion <- table(datos_prueba$asistencia_medica, predicciones_regresion_logistica >= 0.6)
+
+verdaderos_positivos_regresion <- comparacion_regresion[2,2]
+verdaderos_negativos_regresion <- comparacion_regresion[1,1]
+falsos_positivos_regresion <- comparacion_regresion[1,2]
+falsos_negativos_regresion <- comparacion_regresion[2,1]
+
+# VP+VN / Total
+exactitud_regresion <- (verdaderos_positivos_regresion + verdaderos_negativos_regresion) / sum(comparacion_regresion)
+
+# VP / total positivos
+sensibilidad_regresion <- verdaderos_positivos_regresion / (verdaderos_positivos_regresion + falsos_negativos_regresion)
+
+# VP / Total clasificados positivos
+precision_regresion <- verdaderos_positivos_regresion / (verdaderos_positivos_regresion + falsos_positivos_regresion )
+
+# VN/ Total Negativos
+especificidad_regresion <- verdaderos_negativos_regresion / (verdaderos_negativos_regresion + falsos_positivos_regresion)
+
+paste("* Exactitud Total del modelo Regresion Logistica: ", round(exactitud_regresion * 100, digits = 0), "%")
+paste("* Sensibilidad del modelo Regresion Logistica: ", round(sensibilidad_regresion * 100, digits = 0), "%")
+paste("* Precision del modelo Regresion Logistica: ", round(precision_regresion * 100, digits = 0), "%")
+paste("* Especificidad del modelo Regresion Logistica: ", round(especificidad_regresion * 100, digits = 0), "%")
+```
+
+
+#### Bosques Aleatorios
+
+```{r}
+
+predicciones_bosque_aleatorio <- predict(modelo_bosque_aleatorio, 
+                                         newdata = datos_prueba, 
+                                         type = 'class')
+
+comparacion_bosque <- table(predicciones_bosque_aleatorio, datos_prueba$asistencia_medica)
+
+
+verdaderos_positivos_bosque <- comparacion_bosque[2,2]
+verdaderos_negativos_bosque <- comparacion_bosque[1,1]
+falsos_positivos_bosque <- comparacion_bosque[1,2]
+falsos_negativos_bosque <- comparacion_bosque[2,1]
+
+# VP+VN / Total
+exactitud_bosque <- (verdaderos_positivos_bosque + verdaderos_negativos_bosque) / sum(comparacion_bosque)
+
+# VP / total positivos
+sensibilidad_bosque <- verdaderos_positivos_bosque / (verdaderos_positivos_bosque + falsos_negativos_bosque)
+
+# VP / Total clasificados positivos
+precision_bosque <- verdaderos_positivos_bosque / (verdaderos_positivos_bosque + falsos_positivos_bosque )
+
+# VN/ Total Negativos
+especificidad_bosque <- verdaderos_negativos_bosque / (verdaderos_negativos_bosque + falsos_positivos_bosque)
+
+paste("* Exactitud Total del modelo Bosque Aleatorio: ", round(exactitud_bosque * 100, digits = 0), "%")
+paste("* Sensibilidad del modelo Bosque Aleatorio: ", round(sensibilidad_bosque * 100, digits = 0), "%")
+paste("* Precision del modelo Bosque Aleatorio: ", round(precision_bosque * 100, digits = 0), "%")
+paste("* Especificidad del modelo Bosque Aleatorio: ", round(especificidad_bosque * 100, digits = 0), "%")
+
+```
+
+
+# 8. Desarolle al menos 5 conclusiones sobre las clasificaciones de los modelos
+
+- Con base en los resultados obtenidos, se concluye que para todos los modelos el 85% de las observaciones clasificadas se hizo apropiadamente, lo cual significa una exactitud total del 85%.
+
+- El modelo con mayor sensibilidad (enviar asistencia medica a un accidente que no lo necesita) es el arbol de decision con un 92%, y el que tiene menor sensibilidad es la regresion logistica con un 82%.
+
+- Asimismo, se concluye que el modelo con mayor precision es la regresion logistica, con un 92%, los demas modelos tienen todos una precision del 82%.
+
+- En cuanto a la especificidad de los modelos (Clasificar un accidente como que no se necesita asistencia medica, en un caso donde si es necesaria), el modelo con el valor mas alto es la regresion logistica con un 89%, para los demas modelos es solo de un 77%.
+
+- Finalmente, se concluye que el modelo mas recomendado es el de la regresion logistica, ya que es el que tiene mayor precision, sin embargo queda a criterio de los tomadores de deciones el modelo que quieran usar para predecir si es o no necesaria la asistencia medica en un accidente.
+
+
+
+

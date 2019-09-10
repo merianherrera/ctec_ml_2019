@@ -57,7 +57,7 @@ head(datos, 80000)
 
 
 ```{r}
-datos$asistencia_medica <-  as.integer(with(datos, ifelse(datos$tipo_de_lesion %in% c("Herido leve", "Herido grave", "Muerte"), "si", "no")))
+datos$asistencia_medica <-  as.factor(with(datos, ifelse(datos$tipo_de_lesion %in% c("Herido leve", "Herido grave", "Muerte"), "si", "no")))
 
 drops <- c("id", "tipo_de_lesion", "edad", "dia_1", "mes_1", "edad_quinquenal_1")
 datos <- datos[ , !(names(datos) %in% drops)]
@@ -281,20 +281,35 @@ modelo_bosque_aleatorio
 #### SVN
 
 ```{r}
-datos_prueba$prediccion <- predict(modelo_svn, 
+predicciones_svn <- predict(modelo_svn, 
                                    newdata = datos_prueba)
 
-#hist(datos_prueba$asistencia_medica - datos_prueba$prediccion,
-#     breaks = 50,
-#     main = 'Distribución de los Residuos en Prueba',
-#     xlab = 'residuos')
+comparacion_svn <- table(predicciones_svn, datos_prueba$asistencia_medica)
+print(comparacion_svn)
 
-#plot(y = datos_prueba$asistencia_medica - datos_prueba$prediccion,
-#     x = datos_prueba$asistencia_medica ,
-#     main = 'Distribución de los residuos por asistencia medica',
-#     xlab = 'Asistencia Medica',
-#     ylab = 'residuos')
+verdaderos_positivos_svn <- comparacion_svn[2,2]
+verdaderos_negativos_svn <- comparacion_svn[1,1]
+falsos_positivos_svn <- comparacion_svn[1,2]
+falsos_negativos_svn <- comparacion_svn[2,1]
+
+# VP+VN / Total
+exactitud_svn <- (verdaderos_positivos_svn + verdaderos_negativos_svn) / sum(comparacion_svn)
+
+# VP / total positivos
+sensibilidad_svn <- verdaderos_positivos_svn / (verdaderos_positivos_svn + falsos_negativos_svn)
+
+# VP / Total clasificados positivos
+precision_svn <- verdaderos_positivos_svn / (verdaderos_positivos_svn + falsos_positivos_svn )
+
+# VN/ Total Negativos
+especificidad_svn <- verdaderos_negativos_svn / (verdaderos_negativos_svn + falsos_positivos_svn)
+
+paste("* Exactitud Total del modelo SVN: ", round(exactitud_svn * 100, digits = 0), "%")
+paste("* Sensibilidad del modelo SVN: ", round(sensibilidad_svn * 100, digits = 0), "%")
+paste("* Precision del modelo SVN: ", round(precision_svn * 100, digits = 0), "%")
+paste("* Especificidad del modelo SVN: ", round(especificidad_svn * 100, digits = 0), "%")
 ```
+
 
 #### Red Neuronal
 
@@ -414,26 +429,31 @@ paste("* Especificidad del modelo Bosque Aleatorio: ", round(especificidad_bosqu
 
 # 7. Desarolle al menos 5 conclusiones sobre las clasificaciones de los modelos
 
-- Para el modelo Arbol de decision, en general, los resultados del modelo son considerablemente buenos, a pesar de ser un modelo relativamente sencillo. De las observaciones clasificadas, el 85% se hizo apropiadamente. 
+- **Para el modelo Arbol de decision**, en general, los resultados del modelo son considerablemente buenos, a pesar de ser un modelo relativamente sencillo. De las observaciones clasificadas, el 85% se hizo apropiadamente. 
 
 Con respecto al tipo de decisiones que se pueden tomar en este caso, la decision que puede ser mas danina para lsa victimas es que no se envie la asistencia medica en un caso donde se necesita, lo cual puede resultar en la muerte de la victima. La *especificidad* del modelo es del 77%, así que podemos decir que el modelo tiene alrededor de un 23% de posibilidades de cometer este error. 
 
 Alternativamente, se podria enviar la asistencia medica a un accidente que no lo necesite. En este caso, no tenemos afectados directamente, ya que si la victima salio ilesa, no hay mucho trabajo de parte de la asistencia medica, sin embargo, se estarian enviando unidades de asistencia medica a un lugar donde no se necesita, mientras podria estar atendiendo alguna otra emergencia. La *sensitividad* del modelo es del 92%, lo cual quiere decir que el modelo tiene cerca de un 8% probabilidad de cometer este error. Asimismo, la *precisión* es de un 82%, por lo que queda al criterio de los tomadores de decisiones usar o no este modelo.
 
-- Para el modelo de regresion logistica, se crearon variables dummies de los datos que se iban a utilizar (mismos que los del modelo SVN), al igual que el modelo arbol de decision los resultados de este modelo son considerados bastante buenos. La exactitud total de este modelo es de un 85%, lo cual significa que el 85% de las observaciones fueron clasificadas correctamente.
+- **Para el modelo de regresion logistica**, se crearon variables dummies de los datos que se iban a utilizar (mismos que los del modelo SVN), al igual que el modelo arbol de decision los resultados de este modelo son considerados bastante buenos. La exactitud total de este modelo es de un 85%, lo cual significa que el 85% de las observaciones fueron clasificadas correctamente.
 
 Con respecto al tipo de decisiones que se pueden tomar usando este modelo, al igual que en los demas modelos, la decision que puede afectar mas a las victimas en caso de un accidente, es que no se envie la asistencia medica en un caso donde se requiere, lo cual eventualmente puede resultar en la perdida de la vida de dicha victima. La *especificidad* del modelo es del 89%, así que podemos decir que el modelo tiene alrededor de un 11% de posibilidades de cometer este error.
 
 Asismismo, se puede enviar asistencia medica a un accidente que no lo necesita, lo cual resultaria en ocupar unidades de emergencia que podrian estar atendiendo una emergencia real. La *sensitividad* del modelo es del 82%, lo cual quiere decir que el modelo tiene cerca de un 18% probabilidad de cometer este error. Asimismo, la *precisión* es de un 92%, por lo que queda al criterio de los tomadores de decisiones usar o no este modelo.
 
-- Para el modelo bosque aleatorio, se encuentra que tiene la misma exatitud total que los dos modelos anteriores (Arbol de decison y Regresion Logistica), la cual es de un 85%, asi que al igual que los modelos anteriores se le considera un modelo con buenos resultados.
+- **Para el modelo bosque aleatorio**, se encuentra que tiene la misma exatitud total que los dos modelos anteriores (Arbol de decison y Regresion Logistica), la cual es de un 85%, asi que al igual que los modelos anteriores se le considera un modelo con buenos resultados.
 
 Con respecto al tipo de decisiones que se pueden tomar usando este modelo, al igual que en los demas modelos, la decision que puede afectar mas a las victimas en caso de un accidente, es que no se envie la asistencia medica en un caso donde se requiere, lo cual eventualmente puede resultar en la perdida de la vida de dicha victima. La *especificidad* del modelo es del 77%, así que podemos decir que el modelo tiene alrededor de un 33% de posibilidades de cometer este error.
 
 Asismismo, se puede enviar asistencia medica a un accidente que no lo necesita, lo cual resultaria en ocupar unidades de emergencia que podrian estar atendiendo una emergencia real. La *sensitividad* del modelo es del 91%, lo cual quiere decir que el modelo tiene cerca de un 9% probabilidad de cometer este error. Asimismo, la *precisión* es de un 82%, por lo que queda al criterio de los tomadores de decisiones usar o no este modelo.
 
-- Del modelo KNN, se concluye que no se puede aplicar correctamente con el dataset asignado, yas que este esta formado unicamente de variables categoricas, mientras que esta modelo necesita variables numericas para funcionar correctamente. 
+- **Para el modelo SVN**, se calcula una exactitud total del 85%, lo cual significa que el 85% de los valores fueron clasificados correctamente.
 
-- Del modelo SVN, se concluye que al igual que el modelo KNN se tienen problemas por el tipo de dataset asignado (formado unicamente de variables categoricas), es este caso en particular se correr el modelo, mas sin embargo no se pudieron graficar los resultados de las predicciones ya que para evaluarlos se necesita un histograma y estos funcionan unicamente con variables numericas.
+Con respecto al tipo de decisiones que se pueden tomar usando este modelo, al igual que en los demas modelos, la decision que puede afectar mas a las victimas en caso de un accidente, es que no se envie la asistencia medica en un caso donde se requiere, lo cual eventualmente puede resultar en la perdida de la vida de dicha victima. La *especificidad* del modelo es del 77%, así que podemos decir que el modelo tiene alrededor de un 33% de posibilidades de cometer este error.
+
+Asismismo, se puede enviar asistencia medica a un accidente que no lo necesita, lo cual resultaria en ocupar unidades de emergencia que podrian estar atendiendo una emergencia real. La *sensitividad* del modelo es del 91%, lo cual quiere decir que el modelo tiene cerca de un 9% probabilidad de cometer este error. Asimismo, la *precisión* es de un 82%, por lo que queda al criterio de los tomadores de decisiones usar o no este modelo.
+
+- **Del modelo KNN**, se concluye que no se puede aplicar correctamente con el dataset asignado, yas que este esta formado unicamente de variables categoricas, mientras que esta modelo necesita variables numericas para funcionar correctamente. 
+
 
 
