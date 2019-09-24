@@ -28,6 +28,7 @@ library(ROCR)
 library(rpart)
 library(rpart.plot)
 library(tidyr)
+library(glue)
 ```
 
 ## Desarrolla una pregunta
@@ -161,6 +162,8 @@ Se han seleccionado los siguientes modelos de clasificacion para trabajar con lo
 ```{r}
 tumores <- tumores %>% separate(resultado_diagnostico, 
                 c("resultado"))
+
+tumores$resultado <-  as.factor(with(tumores, ifelse(tumores$resultado %in% c("DESCARTADO", "PROBABLE", "SOSPECHOSO"), "NO CONFIRMADO", "CONFIRMADO")))
 ```
 
 
@@ -235,55 +238,56 @@ barplot(table(tumores_prueba$resultado), main = 'Distribución de las clases en 
 
 ```{r}
 
-dataset_modelos = tumores_entrenamiento_10
+dataset_modelos = tumores_entrenamiento
 
-modelo_arbol <- rpart(resultado ~ sexo + provincia, 
+modelo_arbol <- rpart(resultado ~ sexo + provincia + edad_quinquenal, 
                       data = dataset_modelos, 
                       method =  'class', 
                       control = rpart.control(cp = 0))
 
 rpart.plot(modelo_arbol,
-           shadow.col = "gray", 
+           box.palette = "blue",
            main = "Clasificacion de los resultados de enfermedades")
 ```
 
-##### SVN
+##### SVM
 
 ```{r}
-modelo_svn <- svm(resultado ~ sexo + provincia, 
+modelo_svn <- svm(resultado ~ sexo + provincia + edad_quinquenal, 
                   data = dataset_modelos, 
                   kernel = 'linear',
                   cross = 2, 
                   scale = FALSE)
 summary(modelo_svn)
+
 ```
 
 #### Evaluacion de los modelos
 
 ```{r}
-calcular_metricas_modelo <- function(verdaderos_positivos, verdaderos_negativos, falsos_positivos, falsos_negativos) {
+calcular_metricas_modelo <- function(verdaderos_positivos, verdaderos_negativos, falsos_positivos, falsos_negativos, matriz_confusion) {
    # VP+VN / Total
-  exactitud <- (verdaderos_positivos + verdaderos_negativos) / sum(comparacion)
+  exactitud <- round((verdaderos_positivos + verdaderos_negativos) / sum(matriz_confusion) * 100, digits = 2)
   
   # VP / total positivos
-  sensibilidad <- verdaderos_positivos / (verdaderos_positivos + falsos_negativos)
+  sensibilidad <- round(verdaderos_positivos / (verdaderos_positivos + falsos_negativos) * 100, digits = 2)
   
   # VP / Total clasificados positivos
-  precision <- verdaderos_positivos / (verdaderos_positivos + falsos_positivos )
+  precision <- round(verdaderos_positivos / (verdaderos_positivos + falsos_positivos ) * 100, digits = 2)
   
   # VN/ Total Negativos
-  especificidad <- verdaderos_negativos / (verdaderos_negativos + falsos_positivos)
+  especificidad <- round(verdaderos_negativos / (verdaderos_negativos + falsos_positivos) * 100, digits = 2)
   
-  paste("* Exactitud Total del modelo: ", round(exactitud_svn * 100, digits = 0), "%")
-  paste("* Sensibilidad del modelo: ", round(sensibilidad_svn * 100, digits = 0), "%")
-  paste("* Precision del modelo: ", round(precision_svn * 100, digits = 0), "%")
-  paste("* Especificidad del modelo: ", round(especificidad_svn * 100, digits = 0), "%")
+  print(glue("* Exactitud Total del modelo: {exactitud}% "))
+  print(glue("* Sensibilidad del modelo: {sensibilidad}% "))
+  print(glue("* Precision del modelo: {precision}% "))
+  print(glue("* Especificidad del modelo: {especificidad}% "))
 }
 
 ```
 
 
-##### SVN
+##### SVM
 
 ```{r}
 dataset_evaluacion = tumores_prueba
@@ -291,16 +295,14 @@ dataset_evaluacion = tumores_prueba
 predicciones_svn <- predict(modelo_svn, 
                                    newdata = dataset_evaluacion)
 
-comparacion_svn <- table(predicciones_svn, dataset_evaluacion$resultado)
-print(comparacion_svn)
+matriz_svn <- table(predicciones_svn, dataset_evaluacion$resultado)
 
-verdaderos_positivos_svn <- comparacion_svn[2,2]
-verdaderos_negativos_svn <- comparacion_svn[1,1]
-falsos_positivos_svn <- comparacion_svn[1,2]
-falsos_negativos_svn <- comparacion_svn[2,1]
+verdaderos_positivos_svn <- matriz_svn[2,2]
+verdaderos_negativos_svn <- matriz_svn[1,1]
+falsos_positivos_svn <- matriz_svn[1,2]
+falsos_negativos_svn <- matriz_svn[2,1]
 
-
-calcular_metricas_modelo(verdaderos_positivos_svn, verdaderos_negativos_svn, falsos_positivos_svn, falsos_negativos_svn)
+calcular_metricas_modelo(verdaderos_positivos_svn, verdaderos_negativos_svn, falsos_positivos_svn, falsos_negativos_svn, matriz_svn)
 
 ```
 
@@ -308,25 +310,40 @@ calcular_metricas_modelo(verdaderos_positivos_svn, verdaderos_negativos_svn, fal
 
 ```{r}
 predicciones_arbol <- predict(modelo_arbol, 
-                              newdata = datos_prueba, 
+                              newdata = dataset_evaluacion, 
                               type = 'class')
 
 # Comparar la etiqueta verdadera contra la etiqueta predicha.
-comparacion_arbol <- table(predicciones_arbol, datos_prueba$asistencia_medica)
-print(comparacion_arbol)
+matriz_arbol <- table(predicciones_arbol, dataset_evaluacion$resultado)
 
-verdaderos_positivos_arbol <- comparacion_arbol[2,2]
-verdaderos_negativos_arbol <- comparacion_arbol[1,1]
-falsos_positivos_arbol <- comparacion_arbol[1,2]
-falsos_negativos_arbol <- comparacion_arbol[2,1]
+verdaderos_positivos_arbol <- matriz_arbol[2,2]
+verdaderos_negativos_arbol <- matriz_arbol[1,1]
+falsos_positivos_arbol <- matriz_arbol[1,2]
+falsos_negativos_arbol <- matriz_arbol[2,1]
 
-calcular_metricas_modelo(verdaderos_positivos_arbol, verdaderos_negativos_arbol, falsos_positivos_arbol, falsos_negativos_arbol)
+calcular_metricas_modelo(verdaderos_positivos_arbol, verdaderos_negativos_arbol, falsos_positivos_arbol, falsos_negativos_arbol, matriz_arbol)
 
 ```
 
 #### Conclusiones
 
+- **Para el modelo SVN**, se calcula una exactitud total del 94.46%, lo cual significa que el 94.46% de los valores fueron clasificados correctamente. Sin embargo, no se considera un modelo confiable debido al sesgo que presentan los datos.
 
+Con respecto al tipo de decisiones que se pueden tomar usando este modelo, la decision que puede afectar mas a  un paciente, es que no se confirme el diagnostico en un caso donde deberia haberse confirmado, lo cual eventualmente puede resultar en la perdida de la vida de del paciente La *especificidad* del modelo es del 94.46%, así que podemos decir que el modelo tiene alrededor de un 5.54% de posibilidades de cometer este error, segun las metricas calculadas.
+
+Asismismo, se puede clasificar un diganostico como confirmado en un caso donde no se puede confirmar el diagnostio,  lo cual podria resultar en un inconveniente para el paciente y para el centro medico, sin mencionar el gasto de fondos de los recursos de la CCSS para tratar una enfermedad inexistente. Desafortunadamente la *sensitividad*  no se pudo calcular, por lo cual no se conoce la probabilidad de cometer este error. Asimismo, la *precisión* es de un 0%, por lo que no se recomienda usar este modelo.
+
+- **Para el modelo Arbol de decision**, se calcula una exactitud total del 94.46%, lo cual significa que el 94.46% de los valores fueron clasificados correctamente. Sin embargo, al igual que el modelo anterior, no se considera un modelo confiable debido al sesgo que presentan los datos.
+
+Con respecto al tipo de decisiones que se pueden tomar usando este modelo, la decision que puede afectar mas a  un paciente, es que no se confirme el diagnostico en un caso donde deberia haberse confirmado, lo cual eventualmente puede resultar en la perdida de la vida de del paciente La *especificidad* del modelo es del 94.48%, así que podemos decir que el modelo tiene alrededor de un 5.52% de posibilidades de cometer este error, segun las metricas calculadas.
+
+Asismismo, se puede clasificar un diganostico como confirmado en un caso donde no se puede confirmar el diagnostio,  lo cual podria resultar en un inconveniente para el paciente y para el centro medico, sin mencionar el gasto de fondos de los recursos de la CCSS para tratar una enfermedad inexistente. La *sensitividad*  del modelo es de un 44.44%, por lo  la probabilidad de cometer este error es de un 55.56%. Asimismo, la *precisión* es de un 0.3%, por lo que no se recomienda usar este modelo.
+
+- Con base en los resultados obtenidos, se concluye que para todos los modelos el 94.46% de las observaciones clasificadas se hizo apropiadamente, lo cual significa una exactitud total del 94.46%.
+
+- Asimismo, se concluye que el modelo con mayor precision es el arbol de decision, con un 0.3%, sin embargo como se observa claramente son modelos con una precision practicamente nula, por lo cual no se recomienda usarlos con este set de datos.
+
+- Finalmente, basados en los resultados obtenidos se concluye que el modelo con mejores resultados es el arbol de decision.
 
 ## Calificación
 
